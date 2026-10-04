@@ -1,0 +1,41 @@
+[package]
+name = "alekhine"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "A research-grade chess engine."
+authors = ["Mayaz Rakib",]
+license = "AGPL-3.0-or-later"
+readme = "README.md"
+include = [
+    "/src/**/*.rs",
+    "/benches/*.rs",
+    "/tests/**/*.rs",
+    "/test/*.py",
+    "/test/openings.epd",
+    "/scripts/*.py",
+    "/Cargo.toml",
+    "/Cargo.lock",
+    "/build.rs",
+    "/README.md",
+    "/LICENSE",
+    "/project.toml",
+    "/AGENTS.md",
+]
+
+[profile.release]
+codegen-units = 1
+
+[lints.clippy]
+needless_return = "allow"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[[test]]
+name = "core_tests"
+path = "tests/core_tests.rs"
+
+[[bench]]
+name = "performance"
+harness = false

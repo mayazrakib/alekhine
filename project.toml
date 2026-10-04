@@ -1,0 +1,8 @@
+name = "alekhine"
+version = "0.1.0"
+description = "A research-grade chess engine."
+authors = ["Mayaz Rakib",]
+license = "AGPL-3.0-or-later"
+copyright = "Copyright (C) 2026 Mayaz Rakib."
+rust_edition = "2024"
+rust_version = "1.85"
