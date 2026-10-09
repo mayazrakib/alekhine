@@ -7,20 +7,20 @@ use std::sync::atomic::{
 use std::sync::OnceLock;
 use std::time::Instant;
 
-use crate::network::{
+use crate::evaluation::network::{
     Accumulator,
     Network,
 };
-use crate::position::Position;
-use crate::tactical::{
+use crate::chess::position::Position;
+use crate::chess::tactical::{
     calculate_attack_priority,
     calculate_exchange_score,
 };
-use crate::transposition_table::{
+use crate::engine::transposition_table::{
     BoundType,
     TranspositionTable,
 };
-use crate::types::{
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     EngineError,
     EngineResult,

@@ -14,12 +14,12 @@ use std::io::{
 };
 use std::path::Path;
 
-use crate::fingerprint::{
+use crate::chess::fingerprint::{
     compute_byte_fingerprint,
     FINGERPRINT_OFFSET,
     update_byte_fingerprint,
 };
-use crate::neural::{
+use crate::evaluation::neural::{
     encode_features,
     FeatureSet,
     get_policy_head_indices,
@@ -31,8 +31,8 @@ use crate::neural::{
     NEURAL_SCORE_SCALE,
     NeuralNetwork,
 };
-use crate::position::Position;
-use crate::types::{
+use crate::chess::position::Position;
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     Color,
     EngineError,
@@ -684,10 +684,10 @@ pub fn train_network(
 
     for record in records.iter().filter(|record| record.is_validation).take(256) {
         let features = encode_features(&record.board);
-        let mut accumulator = crate::neural::NeuralAccumulator {
+        let mut accumulator = crate::evaluation::neural::NeuralAccumulator {
             board: record.board,
             features,
-            ..crate::neural::NeuralAccumulator::default()
+            ..crate::evaluation::neural::NeuralAccumulator::default()
         };
 
         for perspective in 0..2 {
@@ -770,7 +770,7 @@ pub fn train_network(
 mod tests {
     use std::collections::HashSet;
 
-    use crate::neural::{
+    use crate::evaluation::neural::{
         encode_features,
         NEURAL_HIDDEN_COUNT,
     };

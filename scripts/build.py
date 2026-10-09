@@ -10,11 +10,14 @@ import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
-PROJECT_DIRECTORY = Path(__file__).resolve().parent.parent
+PROJECT_DIRECTORY = Path(__file__,).resolve().parent.parent
 
 def run_command(
     arguments: list[str],
-    environment: dict[str, str],
+    environment: dict[
+        str,
+        str,
+    ],
 ) -> None:
     subprocess.run(
         arguments,
@@ -23,27 +26,27 @@ def run_command(
         check=True,
     )
 
-def resolve_tool(command_name: str) -> list[str]:
+def resolve_tool(command_name: str,) -> list[str]:
     command = shlex.split(os.environ.get(
         command_name.upper(),
         command_name,
-    ))
+    ),)
 
     if not command:
-        raise ValueError(f"Failed to resolve {command_name} because its configured command is empty.")
+        raise ValueError(f"Failed to resolve {command_name} because its configured command is empty.",)
 
-    if shutil.which(command[0]) is None:
+    if shutil.which(command[0],) is None:
         installed_path = Path.home() / ".cargo" / "bin" / command[0]
 
         if installed_path.is_file():
-            command[0] = str(installed_path)
+            command[0] = str(installed_path,)
 
     return command
 
-def build_project(arguments: argparse.Namespace) -> None:
-    metadata = tomllib.loads((PROJECT_DIRECTORY / "Cargo.toml").read_text())["package"]
-    cargo = resolve_tool("cargo")
-    rustc = resolve_tool("rustc")
+def build_project(arguments: argparse.Namespace,) -> None:
+    metadata = tomllib.loads((PROJECT_DIRECTORY / "Cargo.toml").read_text(),)["package"]
+    cargo = resolve_tool("cargo",)
+    rustc = resolve_tool("rustc",)
     mode = arguments.mode
     build_directory = PROJECT_DIRECTORY / "build" / mode
     build_directory.mkdir(
@@ -66,10 +69,10 @@ def build_project(arguments: argparse.Namespace) -> None:
     if arguments.is_native:
         flags += ["-C", "target-cpu=native",]
 
-    if environment.get("RUSTFLAGS"):
-        flags = shlex.split(environment["RUSTFLAGS"]) + flags
+    if environment.get("RUSTFLAGS",):
+        flags = shlex.split(environment["RUSTFLAGS"],) + flags
 
-    environment["RUSTFLAGS"] = shlex.join(flags)
+    environment["RUSTFLAGS"] = shlex.join(flags,)
 
     if arguments.has_lto:
         profile = "RELEASE" if mode == "release" else "DEV"
@@ -77,7 +80,7 @@ def build_project(arguments: argparse.Namespace) -> None:
         environment[f"CARGO_PROFILE_{profile}_CODEGEN_UNITS"] = "1"
 
     target_directory = build_directory / "cargo"
-    command_options = ["--offline", "--locked", "--target-dir", str(target_directory),]
+    command_options = ["--offline", "--locked", "--target-dir", str(target_directory,),]
 
     if mode == "release":
         command_options += ["--release",]
@@ -99,19 +102,19 @@ def build_project(arguments: argparse.Namespace) -> None:
         text=True,
     ).splitlines()
     compiler_version = compiler_output[0]
-    target_architecture = next(line.removeprefix("host: ") for line in compiler_output if line.startswith("host: "))
+    target_architecture = next((line.removeprefix("host: ",) for line in compiler_output if line.startswith("host: ",)),)
     source_digest = hashlib.sha256()
 
     for source_path in sorted([
-        *PROJECT_DIRECTORY.glob("src/*.rs"),
+        *PROJECT_DIRECTORY.glob("src/*.rs",),
         PROJECT_DIRECTORY / "build.rs",
         PROJECT_DIRECTORY / "Cargo.toml",
         PROJECT_DIRECTORY / "Cargo.lock",
-    ]):
-        source_digest.update(str(source_path.relative_to(PROJECT_DIRECTORY)).encode())
-        source_digest.update(source_path.read_bytes())
+    ],):
+        source_digest.update(str(source_path.relative_to(PROJECT_DIRECTORY,),).encode(),)
+        source_digest.update(source_path.read_bytes(),)
 
-    with engine_path.open("rb") as engine_file:
+    with engine_path.open("rb",) as engine_file:
         binary_digest = hashlib.file_digest(
             engine_file,
             "sha256",
@@ -121,7 +124,7 @@ def build_project(arguments: argparse.Namespace) -> None:
         "name": metadata["name"],
         "version": metadata["version"],
         "revision": revision,
-        "built_at_utc": datetime.now(timezone.utc).isoformat(),
+        "built_at_utc": datetime.now(timezone.utc,).isoformat(),
         "source_sha256": source_digest.hexdigest(),
         "binary_sha256": binary_digest,
         "compiler": compiler_version,
@@ -136,7 +139,7 @@ def build_project(arguments: argparse.Namespace) -> None:
     (build_directory / "build_manifest.json").write_text(json.dumps(
         manifest,
         indent=4,
-    ) + "\n")
+    ) + "\n",)
 
     if arguments.should_test:
         run_command(
@@ -144,37 +147,37 @@ def build_project(arguments: argparse.Namespace) -> None:
             environment,
         )
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "uci_tests.py"), str(engine_path),],
+            [sys.executable, str(PROJECT_DIRECTORY / "test" / "uci_tests.py",), str(engine_path,),],
             environment,
         )
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "research_tests.py"), str(engine_path),],
+            [sys.executable, str(PROJECT_DIRECTORY / "test" / "research_tests.py",), str(engine_path,),],
             environment,
         )
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "tool_tests.py"),],
+            [sys.executable, str(PROJECT_DIRECTORY / "test" / "tool_tests.py",),],
             environment,
         )
-        integration_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "integration_tests.py"), str(engine_path),]
+        integration_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "integration_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
-            integration_command += ["--stockfish", str(arguments.stockfish),]
+            integration_command += ["--stockfish", str(arguments.stockfish,),]
 
         run_command(
             integration_command,
             environment,
         )
-        stockfish_training_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "stockfish_training_tests.py"), str(engine_path),]
+        stockfish_training_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "stockfish_training_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
-            stockfish_training_command += ["--stockfish", str(arguments.stockfish),]
+            stockfish_training_command += ["--stockfish", str(arguments.stockfish,),]
 
         run_command(
             stockfish_training_command,
             environment,
         )
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "performance_tests.py"), str(engine_path),],
+            [sys.executable, str(PROJECT_DIRECTORY / "test" / "performance_tests.py",), str(engine_path,),],
             environment,
         )
 
@@ -183,12 +186,12 @@ def build_project(arguments: argparse.Namespace) -> None:
     (build_directory / "build_manifest.json").write_text(json.dumps(
         manifest,
         indent=4,
-    ) + "\n")
+    ) + "\n",)
 
-    print(f"Built alekhine in {build_directory}.")
+    print(f"Built alekhine in {build_directory}.",)
 
 def run_build() -> None:
-    parser = argparse.ArgumentParser(description="Build and verify the alekhine Rust engine.")
+    parser = argparse.ArgumentParser(description="Build and verify the alekhine Rust engine.",)
     parser.add_argument(
         "--mode",
         choices=("release", "debug",),
@@ -217,10 +220,10 @@ def run_build() -> None:
     arguments = parser.parse_args()
 
     if (arguments.stockfish is not None) and not arguments.should_test:
-        parser.error("The --stockfish option requires --test.")
+        parser.error("The --stockfish option requires --test.",)
 
     try:
-        build_project(arguments)
+        build_project(arguments,)
     except (OSError, ValueError, subprocess.CalledProcessError,) as error:
         parser.exit(
             1,

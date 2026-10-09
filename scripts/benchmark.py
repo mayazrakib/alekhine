@@ -35,12 +35,12 @@ class BenchmarkOutcome(Enum):
     PASSED = "passed"
     REGRESSED = "regressed"
 
-def calculate_digest(path: Path) -> str:
+def calculate_digest(path: Path,) -> str:
     digest = hashlib.sha256()
 
-    with path.open("rb") as stream:
-        while chunk := stream.read(1_048_576):
-            digest.update(chunk)
+    with path.open("rb",) as stream:
+        while chunk := stream.read(1_048_576,):
+            digest.update(chunk,)
 
     return digest.hexdigest()
 
@@ -52,18 +52,25 @@ def write_json(
         document,
         indent=4,
         allow_nan=False,
-    ) + "\n")
+    ) + "\n",)
 
-def build_core_binary(log_directory: Path) -> Path:
+def build_core_binary(log_directory: Path,) -> Path:
     environment = os.environ.copy()
-    environment["RUSTC"] = resolve_tool("rustc")[0]
+    environment["RUSTC"] = resolve_tool("rustc",)[0]
     environment["RUSTFLAGS"] = environment.get(
         "RUSTFLAGS",
         "",
     ) + " -Dwarnings"
-    command = resolve_tool("cargo") + [
-        "build", "--offline", "--locked", "--release", "--bench", "performance",
-        "--message-format=json", "--target-dir", str(PROJECT_DIRECTORY / "build" / "benchmark" / "cargo"),
+    command = resolve_tool("cargo",) + [
+        "build",
+        "--offline",
+        "--locked",
+        "--release",
+        "--bench",
+        "performance",
+        "--message-format=json",
+        "--target-dir",
+        str(PROJECT_DIRECTORY / "build" / "benchmark" / "cargo",),
     ]
     completed = subprocess.run(
         command,
@@ -73,25 +80,25 @@ def build_core_binary(log_directory: Path) -> Path:
         text=True,
         timeout=TIMEOUT_SECONDS,
     )
-    (log_directory / "core_build.jsonl").write_text(completed.stdout)
-    (log_directory / "core_build.stderr").write_text(completed.stderr)
+    (log_directory / "core_build.jsonl").write_text(completed.stdout,)
+    (log_directory / "core_build.stderr").write_text(completed.stderr,)
     completed.check_returncode()
 
     for line in completed.stdout.splitlines():
-        event = json.loads(line)
+        event = json.loads(line,)
 
-        if (event.get("reason") == "compiler-artifact") and (event["target"]["name"] == "performance") and event.get("executable"):
-            return Path(event["executable"])
+        if (event.get("reason",) == "compiler-artifact") and (event["target"]["name"] == "performance") and event.get("executable",):
+            return Path(event["executable"],)
 
-    raise RuntimeError("Failed to locate the compiled performance harness.")
+    raise RuntimeError("Failed to locate the compiled performance harness.",)
 
 def read_environment() -> dict:
     cpu_model = platform.processor()
-    cpu_path = Path("/proc/cpuinfo")
+    cpu_path = Path("/proc/cpuinfo",)
 
     if cpu_path.is_file():
         for line in cpu_path.read_text().splitlines():
-            if line.startswith("model name"):
+            if line.startswith("model name",):
                 cpu_model = line.split(
                     ":",
                     1,
@@ -99,7 +106,7 @@ def read_environment() -> dict:
 
                 break
 
-    affinity = sorted(os.sched_getaffinity(0)) if hasattr(
+    affinity = sorted(os.sched_getaffinity(0,),) if hasattr(
         os,
         "sched_getaffinity",
     ) else None
@@ -111,14 +118,14 @@ def read_environment() -> dict:
         "logical_cpu_count": os.cpu_count(),
         "cpu_affinity": affinity,
         "python": platform.python_version(),
-        "performance_clock": vars(time.get_clock_info("perf_counter")),
+        "performance_clock": vars(time.get_clock_info("perf_counter",),),
     }
 
-def read_process_resources(process_id: int) -> tuple[
+def read_process_resources(process_id: int,) -> tuple[
     float | None,
     int | None,
 ]:
-    directory = Path("/proc") / str(process_id)
+    directory = Path("/proc",) / str(process_id,)
 
     if not directory.is_dir():
         return None, None
@@ -127,12 +134,12 @@ def read_process_resources(process_id: int) -> tuple[
         ")",
         1,
     )[1].split()
-    cpu_seconds = (int(fields[11]) + int(fields[12])) / os.sysconf("SC_CLK_TCK")
+    cpu_seconds = (int(fields[11],) + int(fields[12],)) / os.sysconf("SC_CLK_TCK",)
     peak_rss_bytes = None
 
     for line in (directory / "status").read_text().splitlines():
-        if line.startswith("VmHWM:"):
-            peak_rss_bytes = int(line.split()[1]) * 1024
+        if line.startswith("VmHWM:",):
+            peak_rss_bytes = int(line.split()[1],) * 1024
 
     return cpu_seconds, peak_rss_bytes
 
@@ -146,11 +153,11 @@ def execute_command(
     dict,
 ]:
     resource_path = log_directory / f"{name}.resources.json"
-    time_path = Path("/usr/bin/time")
+    time_path = Path("/usr/bin/time",)
 
     if time_path.is_file() and (platform.system() == "Linux"):
         resource_format = '{"user_seconds":%U,"system_seconds":%S,"peak_rss_kib":%M,"major_fault_count":%F,"minor_fault_count":%R,"voluntary_switch_count":%w,"involuntary_switch_count":%c,"exit_code":%x}'
-        command = [str(time_path), "-q", "-o", str(resource_path), "-f", resource_format, "--",] + command
+        command = [str(time_path,), "-q", "-o", str(resource_path,), "-f", resource_format, "--",] + command
 
     started_at = time.perf_counter_ns()
     process = subprocess.Popen(
@@ -164,7 +171,7 @@ def execute_command(
     failure = None
 
     try:
-        stdout, stderr = process.communicate(timeout=TIMEOUT_SECONDS)
+        stdout, stderr = process.communicate(timeout=TIMEOUT_SECONDS,)
     except subprocess.TimeoutExpired as error:
         failure = error
 
@@ -179,8 +186,8 @@ def execute_command(
         stdout, stderr = process.communicate()
 
     elapsed_nanoseconds = time.perf_counter_ns() - started_at
-    (log_directory / f"{name}.stdout").write_text(stdout)
-    (log_directory / f"{name}.stderr").write_text(stderr)
+    (log_directory / f"{name}.stdout").write_text(stdout,)
+    (log_directory / f"{name}.stderr").write_text(stderr,)
 
     if failure:
         raise failure
@@ -193,7 +200,7 @@ def execute_command(
             stderr=stderr,
         )
 
-    resources = json.loads(resource_path.read_text()) if resource_path.is_file() else {}
+    resources = json.loads(resource_path.read_text(),) if resource_path.is_file() else {}
 
     return stdout, elapsed_nanoseconds, resources
 
@@ -202,13 +209,13 @@ def append_sample(
     samples: list[Sample],
     sample: Sample,
 ) -> None:
-    with (output / "samples.jsonl").open("a") as stream:
+    with (output / "samples.jsonl").open("a",) as stream:
         stream.write(json.dumps(
             sample,
             allow_nan=False,
-        ) + "\n")
+        ) + "\n",)
 
-    samples.append(sample)
+    samples.append(sample,)
 
 def run_core_suite(
     arguments: argparse.Namespace,
@@ -216,12 +223,21 @@ def run_core_suite(
     samples: list[Sample],
 ) -> None:
     command = [
-        str(core_binary), "--samples", str(arguments.samples), "--minimum_ms", str(arguments.minimum_ms),
-        "--nodes", str(arguments.nodes), "--depth", str(arguments.depth), "--suite", arguments.suite if arguments.suite in ["micro", "search",] else "all",
+        str(core_binary,),
+        "--samples",
+        str(arguments.samples,),
+        "--minimum_ms",
+        str(arguments.minimum_ms,),
+        "--nodes",
+        str(arguments.nodes,),
+        "--depth",
+        str(arguments.depth,),
+        "--suite",
+        arguments.suite if arguments.suite in ["micro", "search",] else "all",
     ]
 
     if arguments.network:
-        command += ["--network", str(arguments.network),]
+        command += ["--network", str(arguments.network,),]
 
     stdout, elapsed_nanoseconds, resources = execute_command(
         command,
@@ -234,7 +250,7 @@ def run_core_suite(
     )
 
     for line in stdout.splitlines():
-        sample = json.loads(line)
+        sample = json.loads(line,)
 
         if sample["suite"] == "metadata":
             append_sample(
@@ -246,7 +262,7 @@ def run_core_suite(
             continue
 
         if (sample["elapsed_nanoseconds"] <= 0) or (sample["operation_count"] <= 0) or (sample["phase"] not in ["measured", "first pass",]):
-            raise ValueError("Failed to validate a performance harness sample.")
+            raise ValueError("Failed to validate a performance harness sample.",)
 
         append_sample(
             arguments.output,
@@ -259,27 +275,27 @@ def run_latency_suite(
     samples: list[Sample],
 ) -> None:
     legal_output, _, _ = execute_command(
-        [str(arguments.engine), "divide", "1",],
+        [str(arguments.engine,), "divide", "1",],
         arguments.output / "logs",
         "latency_legal_moves",
     )
-    legal_moves = {line.split()[0] for line in legal_output.splitlines() if (len(line.split()) == 2) and line.split()[1].isdigit()}
+    legal_moves = {line.split()[0] for line in legal_output.splitlines() if (len(line.split(),) == 2) and line.split()[1].isdigit()}
 
-    if len(legal_moves) != 20:
-        raise RuntimeError("Failed to validate the latency workload's initial legal moves.")
+    if len(legal_moves,) != 20:
+        raise RuntimeError("Failed to validate the latency workload's initial legal moves.",)
 
     models = [("bootstrap", None,),]
 
     if arguments.network:
-        models.append(("nnue", arguments.network,))
+        models.append(("nnue", arguments.network,),)
 
     for model, network_path in models:
         options = {"Hash": "16", "Move Overhead": "0",}
 
         if network_path:
-            options["EvalFile"] = str(network_path)
+            options["EvalFile"] = str(network_path,)
 
-        for sample_index in range(arguments.samples + 1):
+        for sample_index in range(arguments.samples + 1,):
             phase = "first pass" if sample_index == 0 else "measured"
             started_at = time.perf_counter_ns()
             client = UciClient(
@@ -297,38 +313,43 @@ def run_latency_suite(
 
                 for name in ["idle_ready", "active_ready", "stop", "ponderhit", "movetime_50",]:
                     client.start_game()
-                    client.send_command("position startpos")
+                    client.send_command("position startpos",)
                     transcript = []
 
                     if name in ["active_ready", "stop", "ponderhit",]:
                         client.is_searching = True
-                        client.send_command("go ponder nodes 1000" if name == "ponderhit" else "go infinite")
+                        client.send_command("go ponder nodes 1000" if name == "ponderhit" else "go infinite",)
                         transcript += client.wait_for_line(
                             "info depth ",
                             20.0,
                         )
 
-                    cpu_before, _ = read_process_resources(client.process.pid)
+                    cpu_before, _ = read_process_resources(client.process.pid,)
                     started_at = time.perf_counter_ns()
                     command = {"idle_ready": "isready", "active_ready": "isready", "stop": "stop", "ponderhit": "ponderhit", "movetime_50": "go movetime 50",}[name]
-                    client.send_command(command)
+                    client.send_command(command,)
                     transcript += client.wait_for_line(
-                        "readyok" if name.endswith("ready") else "bestmove ",
+                        "readyok" if name.endswith("ready",) else "bestmove ",
                         20.0,
                     )
                     elapsed_nanoseconds = time.perf_counter_ns() - started_at
-                    cpu_after, peak_rss_bytes = read_process_resources(client.process.pid)
+                    cpu_after, peak_rss_bytes = read_process_resources(client.process.pid,)
 
-                    if not name.endswith("ready"):
+                    if not name.endswith("ready",):
                         client.is_searching = False
                         best_move = transcript[-1].split()[1]
 
                         if best_move not in legal_moves:
-                            raise RuntimeError("Failed to validate a latency benchmark best move.")
+                            raise RuntimeError("Failed to validate a latency benchmark best move.",)
 
                     sample: Sample = {
-                        "suite": "latency", "name": name, "model": model, "phase": phase, "sample_index": sample_index,
-                        "operation_count": 1, "elapsed_nanoseconds": elapsed_nanoseconds,
+                        "suite": "latency",
+                        "name": name,
+                        "model": model,
+                        "phase": phase,
+                        "sample_index": sample_index,
+                        "operation_count": 1,
+                        "elapsed_nanoseconds": elapsed_nanoseconds,
                         "cpu_seconds": cpu_after - cpu_before if (cpu_after is not None) and (cpu_before is not None) else None,
                         "peak_rss_bytes": peak_rss_bytes,
                     }
@@ -344,7 +365,7 @@ def run_latency_suite(
                         samples,
                         sample,
                     )
-                    (arguments.output / "logs" / f"latency_{model}_{sample_index}_{name}.uci").write_text("\n".join(transcript) + "\n")
+                    (arguments.output / "logs" / f"latency_{model}_{sample_index}_{name}.uci").write_text("\n".join(transcript,) + "\n",)
             finally:
                 client.close_process()
 
@@ -356,35 +377,41 @@ def run_training_suite(
     for record_count in arguments.training_records:
         dataset_path = arguments.output / f"synthetic_{record_count}.txt"
         execute_command(
-            [str(core_binary), "--dataset", str(dataset_path), "--records", str(record_count),],
+            [str(core_binary,), "--dataset", str(dataset_path,), "--records", str(record_count,),],
             arguments.output / "logs",
             f"generate_{record_count}",
         )
-        dataset_digest = calculate_digest(dataset_path)
+        dataset_digest = calculate_digest(dataset_path,)
         write_json(
-            dataset_path.with_suffix(".provenance.json"),
+            dataset_path.with_suffix(".provenance.json",),
             {"is_synthetic": True, "seed": 20261004, "record_count": record_count, "sha256": dataset_digest, "targets": "Material score, synthetic draw outcome, and first legal move.",},
         )
 
-        for sample_index in range(arguments.samples + 1):
+        for sample_index in range(arguments.samples + 1,):
             network_path = arguments.output / f"trained_{record_count}_{sample_index}.nnue"
             stdout, elapsed_nanoseconds, resources = execute_command(
-                [str(arguments.engine), "train_network", str(dataset_path), str(network_path), str(arguments.epochs), "--batch_size", str(arguments.batch_size), "--seed", "20261004", "--maximum_record_count", str(record_count),],
+                [str(arguments.engine,), "train_network", str(dataset_path,), str(network_path,), str(arguments.epochs,), "--batch_size", str(arguments.batch_size,), "--seed", "20261004", "--maximum_record_count", str(record_count,),],
                 arguments.output / "logs",
                 f"train_{record_count}_{sample_index}",
             )
-            training_manifest = json.loads(network_path.with_suffix(".training.json").read_text())
+            training_manifest = json.loads(network_path.with_suffix(".training.json",).read_text(),)
 
             if not network_path.is_file() or not stdout or (training_manifest["training_record_count"] + training_manifest["validation_record_count"] != record_count):
-                raise RuntimeError("Failed to validate a training benchmark export.")
+                raise RuntimeError("Failed to validate a training benchmark export.",)
 
             append_sample(
                 arguments.output,
                 samples,
                 {
-                    "suite": "training", "name": f"records_{record_count}_batch_{arguments.batch_size}", "model": "nnue",
-                    "phase": "first pass" if sample_index == 0 else "measured", "sample_index": sample_index,
-                    "operation_count": 1, "elapsed_nanoseconds": elapsed_nanoseconds, "record_count": record_count, "epoch_count": arguments.epochs,
+                    "suite": "training",
+                    "name": f"records_{record_count}_batch_{arguments.batch_size}",
+                    "model": "nnue",
+                    "phase": "first pass" if sample_index == 0 else "measured",
+                    "sample_index": sample_index,
+                    "operation_count": 1,
+                    "elapsed_nanoseconds": elapsed_nanoseconds,
+                    "record_count": record_count,
+                    "epoch_count": arguments.epochs,
                     "cpu_seconds": resources["user_seconds"] + resources["system_seconds"] if resources else None,
                     "peak_rss_bytes": resources["peak_rss_kib"] * 1024 if resources else None,
                 },
@@ -399,20 +426,20 @@ def validate_baseline(
         baseline,
         dict,
     ):
-        raise ValueError("Failed to compare a baseline that is not a report object.")
+        raise ValueError("Failed to compare a baseline that is not a report object.",)
 
-    if (baseline.get("schema_version") != SCHEMA_VERSION) or (baseline.get("status") != "complete"):
-        raise ValueError("Failed to compare an incomplete or incompatible baseline report.")
+    if (baseline.get("schema_version",) != SCHEMA_VERSION) or (baseline.get("status",) != "complete"):
+        raise ValueError("Failed to compare an incomplete or incompatible baseline report.",)
 
     for field in ["workloads", "suite_sha256", "network_sha256",]:
         if candidate[field] != baseline[field]:
-            raise ValueError(f"Failed to compare benchmarks with mismatched {field}.")
+            raise ValueError(f"Failed to compare benchmarks with mismatched {field}.",)
 
     if not should_allow_environment_change and (candidate["environment"] != baseline["environment"]):
-        raise ValueError("Failed to compare benchmarks from different environments. Use --allow_environment_change for an explicit exploratory comparison.")
+        raise ValueError("Failed to compare benchmarks from different environments. Use --allow_environment_change for an explicit exploratory comparison.",)
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Measure engine performance and retain reproducible benchmark artifacts.")
+    parser = argparse.ArgumentParser(description="Measure engine performance and retain reproducible benchmark artifacts.",)
     parser.add_argument(
         "--engine",
         type=Path,
@@ -471,13 +498,13 @@ def parse_arguments() -> argparse.Namespace:
             arguments,
             name,
         ) <= maximum:
-            parser.error(f"Failed to validate {name}: expected {minimum} through {maximum}.")
+            parser.error(f"Failed to validate {name}: expected {minimum} through {maximum}.",)
 
-    if not arguments.training_records or len(arguments.training_records) > 8 or len(set(arguments.training_records)) != len(arguments.training_records) or any(not 32 <= count <= 100_000 for count in arguments.training_records):
-        parser.error("Failed to validate unique training record counts between 32 and 100000.")
+    if not arguments.training_records or len(arguments.training_records,) > 8 or len(set(arguments.training_records,),) != len(arguments.training_records,) or any((not 32 <= count <= 100_000 for count in arguments.training_records),):
+        parser.error("Failed to validate unique training record counts between 32 and 100000.",)
 
-    if not math.isfinite(arguments.maximum_regression_percent) or (arguments.maximum_regression_percent < 0):
-        parser.error("Failed to validate the regression threshold.")
+    if not math.isfinite(arguments.maximum_regression_percent,) or (arguments.maximum_regression_percent < 0):
+        parser.error("Failed to validate the regression threshold.",)
 
     arguments.engine = arguments.engine.resolve()
     arguments.output = arguments.output.resolve()
@@ -498,20 +525,20 @@ def parse_arguments() -> argparse.Namespace:
 
     return arguments
 
-def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
-    arguments.output.mkdir(parents=True)
+def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
+    arguments.output.mkdir(parents=True,)
     log_directory = arguments.output / "logs"
     log_directory.mkdir()
     report = {
         "schema_version": SCHEMA_VERSION,
         "status": "running",
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": datetime.now(timezone.utc,).isoformat(),
         "environment": read_environment(),
         "workloads": {name: getattr(
             arguments,
             name,
         ) for name in ["suite", "samples", "minimum_ms", "nodes", "depth", "epochs", "batch_size", "training_records",]},
-        "suite_sha256": hashlib.sha256(b"".join((PROJECT_DIRECTORY / path).read_bytes() for path in ["benches/performance.rs", "test/openings.epd", "scripts/benchmark.py", "scripts/benchmark_statistics.py",])).hexdigest(),
+        "suite_sha256": hashlib.sha256(b"".join(((PROJECT_DIRECTORY / path).read_bytes() for path in ["benches/performance.rs", "test/openings.epd", "scripts/benchmark.py", "scripts/benchmark_statistics.py",]),),).hexdigest(),
         "resource_scope": "GNU Time measures whole subprocesses. Linux proc CPU deltas use clock ticks, and RSS is the process high-water mark. Unsupported resource fields are null.",
         "training_scope": "Synthetic workload throughput includes loading, feature encoding, optimizer epochs, validation, quantization, and export. It is not model-quality evidence.",
     }
@@ -522,10 +549,10 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
     )
 
     try:
-        report["engine_sha256"] = calculate_digest(arguments.engine)
-        report["network_sha256"] = calculate_digest(arguments.network) if arguments.network else None
+        report["engine_sha256"] = calculate_digest(arguments.engine,)
+        report["network_sha256"] = calculate_digest(arguments.network,) if arguments.network else None
         report["core_scope"] = "The harness measures its linked Rust library. Supply the archived --core_binary when comparing an older engine implementation. The UCI and training suites use --engine."
-        baseline = json.loads(arguments.baseline.read_text()) if arguments.baseline else None
+        baseline = json.loads(arguments.baseline.read_text(),) if arguments.baseline else None
 
         if baseline is not None:
             validate_baseline(
@@ -537,13 +564,13 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
         core_binary = None
 
         if arguments.suite != "latency":
-            core_binary = arguments.core_binary or build_core_binary(log_directory)
-            report["core_binary_sha256"] = calculate_digest(core_binary)
-            report["core_binary"] = str(core_binary)
+            core_binary = arguments.core_binary or build_core_binary(log_directory,)
+            report["core_binary_sha256"] = calculate_digest(core_binary,)
+            report["core_binary"] = str(core_binary,)
 
-        report["engine"] = str(arguments.engine)
+        report["engine"] = str(arguments.engine,)
         report["compiler"] = subprocess.check_output(
-            resolve_tool("rustc") + ["--version",],
+            resolve_tool("rustc",) + ["--version",],
             text=True,
             timeout=20.0,
         ).strip()
@@ -552,14 +579,14 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
             "",
         )
         report["core_effective_rustflags"] = report["rustflags"] + " -Dwarnings" if not arguments.core_binary else None
-        report["cargo_profile_overrides"] = {name: setting for name, setting in os.environ.items() if name.startswith("CARGO_PROFILE_")}
-        report["core_source_sha256"] = hashlib.sha256(b"".join(path.read_bytes() for path in sorted((PROJECT_DIRECTORY / "src").glob("*.rs")))).hexdigest() if not arguments.core_binary else None
-        report["network"] = str(arguments.network) if arguments.network else None
+        report["cargo_profile_overrides"] = {name: setting for name, setting in os.environ.items() if name.startswith("CARGO_PROFILE_",)}
+        report["core_source_sha256"] = hashlib.sha256(b"".join((path.read_bytes() for path in sorted((PROJECT_DIRECTORY / "src").glob("*.rs",),)),),).hexdigest() if not arguments.core_binary else None
+        report["network"] = str(arguments.network,) if arguments.network else None
         build_manifest_path = arguments.engine.parent / "build_manifest.json"
-        report["engine_build_manifest"] = json.loads(build_manifest_path.read_text()) if build_manifest_path.is_file() else None
+        report["engine_build_manifest"] = json.loads(build_manifest_path.read_text(),) if build_manifest_path.is_file() else None
 
         if report["engine_build_manifest"] and (report["engine_build_manifest"]["binary_sha256"] != report["engine_sha256"]):
-            raise ValueError("Failed to benchmark an engine with a stale build manifest.")
+            raise ValueError("Failed to benchmark an engine with a stale build manifest.",)
 
         samples: list[Sample] = []
 
@@ -595,13 +622,13 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
                 samples,
             )
 
-        if (calculate_digest(arguments.engine) != report["engine_sha256"]) or (core_binary and (calculate_digest(core_binary) != report["core_binary_sha256"])) or (arguments.network and (calculate_digest(arguments.network) != report["network_sha256"])):
-            raise RuntimeError("Failed to complete benchmarks because a measured binary or network changed.")
+        if (calculate_digest(arguments.engine,) != report["engine_sha256"]) or (core_binary and (calculate_digest(core_binary,) != report["core_binary_sha256"])) or (arguments.network and (calculate_digest(arguments.network,) != report["network_sha256"])):
+            raise RuntimeError("Failed to complete benchmarks because a measured binary or network changed.",)
 
-        measurements = summarize_samples(samples)
+        measurements = summarize_samples(samples,)
 
         if not measurements:
-            raise RuntimeError("Failed to complete benchmarks without measured samples.")
+            raise RuntimeError("Failed to complete benchmarks without measured samples.",)
 
         report["measurements"] = measurements
         report["comparisons"] = compare_measurements(
@@ -610,31 +637,31 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
             arguments.maximum_regression_percent,
         ) if baseline is not None else []
         report["maximum_regression_percent"] = arguments.maximum_regression_percent
-        report["has_regressed"] = any(comparison["has_regressed"] for comparison in report["comparisons"])
+        report["has_regressed"] = any((comparison["has_regressed"] for comparison in report["comparisons"]),)
         report["status"] = "complete"
-        report["completed_at"] = datetime.now(timezone.utc).isoformat()
+        report["completed_at"] = datetime.now(timezone.utc,).isoformat()
 
         with (arguments.output / "summary.csv").open(
             "w",
             newline="",
         ) as stream:
-            writer = csv.writer(stream)
-            writer.writerow(["suite", "name", "model", "metric", "sample_count", "median", "p95", "coefficient_of_variation",])
+            writer = csv.writer(stream,)
+            writer.writerow(["suite", "name", "model", "metric", "sample_count", "median", "p95", "coefficient_of_variation",],)
 
             for measurement in measurements:
                 distribution = measurement["distribution"]
-                writer.writerow([measurement[field] for field in ["suite", "name", "model", "metric",]] + [distribution[field] for field in ["sample_count", "median", "p95", "coefficient_of_variation",]])
+                writer.writerow([measurement[field] for field in ["suite", "name", "model", "metric",]] + [distribution[field] for field in ["sample_count", "median", "p95", "coefficient_of_variation",]],)
 
         write_json(
             manifest_path,
             report,
         )
-        print(f"Completed benchmarks. Results are in {arguments.output}.")
+        print(f"Completed benchmarks. Results are in {arguments.output}.",)
 
         return BenchmarkOutcome.REGRESSED if report["has_regressed"] else BenchmarkOutcome.PASSED
     except BaseException as error:
         report["status"] = "failed"
-        report["failure"] = str(error)
+        report["failure"] = str(error,)
         write_json(
             manifest_path,
             report,
@@ -644,7 +671,7 @@ def run_benchmarks(arguments: argparse.Namespace) -> BenchmarkOutcome:
 
 def main() -> int:
     try:
-        outcome = run_benchmarks(parse_arguments())
+        outcome = run_benchmarks(parse_arguments(),)
 
         if outcome is BenchmarkOutcome.REGRESSED:
             print(
@@ -664,4 +691,4 @@ def main() -> int:
         return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(),)

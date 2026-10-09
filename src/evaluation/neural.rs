@@ -2,13 +2,13 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
-use crate::fingerprint::compute_byte_fingerprint;
-use crate::position::{
+use crate::chess::fingerprint::compute_byte_fingerprint;
+use crate::chess::position::{
     Position,
     UndoState,
 };
-use crate::tactical::can_attack_square;
-use crate::types::{
+use crate::chess::tactical::can_attack_square;
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     Color,
     EngineError,
@@ -471,9 +471,9 @@ impl NeuralNetwork {
 
 #[cfg(test)]
 mod tests {
-    use crate::fingerprint::compute_byte_fingerprint;
-    use crate::position::Position;
-    use crate::types::{
+    use crate::chess::fingerprint::compute_byte_fingerprint;
+    use crate::chess::position::Position;
+    use crate::chess::types::{
         Color,
         START_FEN,
     };

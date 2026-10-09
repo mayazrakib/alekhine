@@ -1,5 +1,5 @@
-use crate::position::Position;
-use crate::types::{
+use crate::chess::position::Position;
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     Color,
     get_piece_score,
@@ -221,8 +221,8 @@ pub fn calculate_attack_priority(
 
 #[cfg(test)]
 mod tests {
-    use crate::position::Position;
-    use crate::types::{
+    use crate::chess::position::Position;
+    use crate::chess::types::{
         BOARD_SQUARE_COUNT,
         Color,
         START_FEN,

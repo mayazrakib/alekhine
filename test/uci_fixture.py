@@ -12,40 +12,40 @@ def run_fixture() -> None:
         command = command.strip()
 
         if command == "uci":
-            print("id name Alekhine protocol test fixture")
-            print("option name Hash type spin default 16 min 1 max 512")
-            print("option name Threads type spin default 1 min 1 max 1")
-            print("option name fault_mode type string default normal")
-            print("option name best_move type string default e2e4")
-            print("option name delay_milliseconds type spin default 0 min 0 max 1000")
+            print("id name Alekhine protocol test fixture",)
+            print("option name Hash type spin default 16 min 1 max 512",)
+            print("option name Threads type spin default 1 min 1 max 1",)
+            print("option name fault_mode type string default normal",)
+            print("option name best_move type string default e2e4",)
+            print("option name delay_milliseconds type spin default 0 min 0 max 1000",)
             print(
                 "uciok",
                 flush=True,
             )
-        elif command.startswith("setoption name fault_mode value "):
+        elif command.startswith("setoption name fault_mode value ",):
             fault_mode = command.split(
                 " value ",
                 1,
             )[1]
-        elif command.startswith("setoption name best_move value "):
+        elif command.startswith("setoption name best_move value ",):
             best_move = command.split(
                 " value ",
                 1,
             )[1]
-        elif command.startswith("setoption name delay_milliseconds value "):
+        elif command.startswith("setoption name delay_milliseconds value ",):
             delay_milliseconds = int(command.split(
                 " value ",
                 1,
-            )[1])
+            )[1],)
         elif command == "isready":
             if fault_mode == "invalid option":
-                print("info string Failed to configure the test fixture.")
+                print("info string Failed to configure the test fixture.",)
 
             print(
                 "readyok",
                 flush=True,
             )
-        elif command.startswith("go "):
+        elif command.startswith("go ",):
             if fault_mode == "crash":
                 print(
                     "Forced fixture termination.",
@@ -53,7 +53,7 @@ def run_fixture() -> None:
                     flush=True,
                 )
 
-                raise SystemExit(1)
+                raise SystemExit(1,)
 
             if fault_mode == "oversized":
                 print(
@@ -77,9 +77,9 @@ def run_fixture() -> None:
                 continue
 
             if delay_milliseconds > 0:
-                time.sleep(delay_milliseconds / 1000)
+                time.sleep(delay_milliseconds / 1000,)
 
-            print(f"info depth 2 multipv 1 score cp 25 nodes 12 pv {best_move}")
+            print(f"info depth 2 multipv 1 score cp 25 nodes 12 pv {best_move}",)
             print(
                 f"bestmove {best_move}",
                 flush=True,

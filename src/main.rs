@@ -4,34 +4,34 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::time::Instant;
 
-use alekhine::network::Network;
-use alekhine::position::{
+use alekhine::chess::position::{
     count_perft,
     Position,
 };
-use alekhine::search::{
-    Search,
-    SearchControl,
-    SearchLimits,
-    SearchOptions,
-};
-use alekhine::stockfish_network::{
-    STOCKFISH_BUCKET_COUNT,
-    StockfishNetwork,
-};
-use alekhine::stockfish_training::fine_tune_stockfish;
-use alekhine::training::{
-    train_network,
-    TrainingOptions,
-};
-use alekhine::transposition_table::TranspositionTable;
-use alekhine::types::{
+use alekhine::chess::types::{
     EngineError,
     EngineResult,
     MAXIMUM_PLY_COUNT,
     START_FEN,
 };
-use alekhine::uci::UciSession;
+use alekhine::engine::search::{
+    Search,
+    SearchControl,
+    SearchLimits,
+    SearchOptions,
+};
+use alekhine::engine::transposition_table::TranspositionTable;
+use alekhine::evaluation::network::Network;
+use alekhine::evaluation::stockfish_network::{
+    STOCKFISH_BUCKET_COUNT,
+    StockfishNetwork,
+};
+use alekhine::protocol::uci::UciSession;
+use alekhine::training::native::{
+    train_network,
+    TrainingOptions,
+};
+use alekhine::training::stockfish::fine_tune_stockfish;
 
 const BENCHMARK_POSITIONS: [&str; 4] = [
     START_FEN,

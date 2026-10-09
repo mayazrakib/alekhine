@@ -1,20 +1,20 @@
 use std::sync::atomic::Ordering;
 
-use alekhine::network::Network;
-use alekhine::position::Position;
-use alekhine::search::{
-    Search,
-    SearchControl,
-    SearchLimits,
-    SearchOptions,
-};
-use alekhine::transposition_table::TranspositionTable;
-use alekhine::types::{
+use alekhine::chess::position::Position;
+use alekhine::chess::types::{
     MATE_SCORE,
     MAXIMUM_HISTORY_COUNT,
     Move,
     START_FEN,
 };
+use alekhine::engine::search::{
+    Search,
+    SearchControl,
+    SearchLimits,
+    SearchOptions,
+};
+use alekhine::engine::transposition_table::TranspositionTable;
+use alekhine::evaluation::network::Network;
 
 #[test]
 fn test_castling_moves_relocate_both_pieces_and_restore_all_state() {
@@ -221,8 +221,8 @@ fn test_history_capacity_failure_preserves_position() {
     let chess_move = Move::create_move(
         45,
         62,
-        alekhine::types::PieceType::NONE,
-        alekhine::types::MoveFlag::QUIET,
+        alekhine::chess::types::PieceType::NONE,
+        alekhine::chess::types::MoveFlag::QUIET,
     );
     assert!(position.make_move(chess_move).is_err());
     assert!(position.make_null_move().is_err());

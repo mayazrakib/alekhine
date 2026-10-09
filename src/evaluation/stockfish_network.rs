@@ -13,13 +13,13 @@ use std::sync::{
     OnceLock,
 };
 
-use crate::fingerprint::{
+use crate::chess::fingerprint::{
     compute_byte_fingerprint,
     update_byte_fingerprint,
 };
-use crate::position::Position;
-use crate::tactical::can_attack_square;
-use crate::types::{
+use crate::chess::position::Position;
+use crate::chess::tactical::can_attack_square;
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     Color,
     EngineError,

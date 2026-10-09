@@ -1,4 +1,4 @@
-use crate::types::{
+use crate::chess::types::{
     Bitboard,
     BLACK_KINGSIDE,
     BLACK_QUEENSIDE,

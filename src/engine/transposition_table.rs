@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use crate::types::{
+use crate::chess::types::{
     EngineError,
     EngineResult,
     MATE_THRESHOLD,
@@ -166,7 +166,7 @@ impl TranspositionTable {
 
 #[cfg(test)]
 mod tests {
-    use crate::types::{
+    use crate::chess::types::{
         MATE_SCORE,
         Move,
     };

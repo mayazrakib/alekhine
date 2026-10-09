@@ -4,15 +4,15 @@ use std::sync::atomic::{
     Ordering,
 };
 
-use alekhine::network::{
+use alekhine::evaluation::network::{
     compute_outcome_probabilities,
     Network,
 };
-use alekhine::position::{
+use alekhine::chess::position::{
     count_perft,
     Position,
 };
-use alekhine::search::{
+use alekhine::engine::search::{
     calculate_time_budget,
     Search,
     SearchControl,
@@ -21,11 +21,11 @@ use alekhine::search::{
     SearchReport,
     SearchResult,
 };
-use alekhine::transposition_table::{
+use alekhine::engine::transposition_table::{
     BoundType,
     TranspositionTable,
 };
-use alekhine::types::{
+use alekhine::chess::types::{
     Color,
     MATE_SCORE,
     Move,

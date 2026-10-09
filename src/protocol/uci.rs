@@ -14,19 +14,8 @@ use std::thread::{
     JoinHandle,
 };
 
-use crate::network::Network;
-use crate::position::Position;
-use crate::search::{
-    calculate_time_budget,
-    Search,
-    SearchControl,
-    SearchLimits,
-    SearchOptions,
-    SearchReport,
-    TimeBudget,
-};
-use crate::transposition_table::TranspositionTable;
-use crate::types::{
+use crate::chess::position::Position;
+use crate::chess::types::{
     Color,
     EngineError,
     EngineResult,
@@ -37,6 +26,17 @@ use crate::types::{
     Move,
     START_FEN,
 };
+use crate::engine::search::{
+    calculate_time_budget,
+    Search,
+    SearchControl,
+    SearchLimits,
+    SearchOptions,
+    SearchReport,
+    TimeBudget,
+};
+use crate::engine::transposition_table::TranspositionTable;
+use crate::evaluation::network::Network;
 
 const MAXIMUM_COMMAND_BYTES: usize = 65536;
 const MAXIMUM_CLOCK_MILLISECONDS: i64 = 604800000;

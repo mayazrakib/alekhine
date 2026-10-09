@@ -7,11 +7,11 @@ use std::io::{
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::fingerprint::{
+use crate::chess::fingerprint::{
     FINGERPRINT_OFFSET,
     update_byte_fingerprint,
 };
-use crate::neural::{
+use crate::evaluation::neural::{
     get_policy_head_indices,
     NEURAL_HEAD_COUNT,
     NEURAL_MAGIC,
@@ -19,15 +19,15 @@ use crate::neural::{
     NeuralAccumulator,
     NeuralNetwork,
 };
-use crate::position::{
+use crate::chess::position::{
     Position,
     UndoState,
 };
-use crate::stockfish_network::{
+use crate::evaluation::stockfish_network::{
     STOCKFISH_VERSION,
     StockfishNetwork,
 };
-use crate::types::{
+use crate::chess::types::{
     BOARD_SQUARE_COUNT,
     Color,
     EngineError,
@@ -743,12 +743,12 @@ pub fn compute_outcome_probabilities(centipawn_score: i32) -> OutcomeProbabiliti
 
 #[cfg(test)]
 mod tests {
-    use crate::neural::{
+    use crate::evaluation::neural::{
         NEURAL_QUANTIZATION_SCALE,
         NeuralNetwork,
     };
-    use crate::position::Position;
-    use crate::types::START_FEN;
+    use crate::chess::position::Position;
+    use crate::chess::types::START_FEN;
     use super::Network;
 
     #[test]

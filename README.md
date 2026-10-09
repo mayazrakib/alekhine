@@ -66,6 +66,8 @@ Stockfish integration tests additionally require Stockfish 18 and `python-chess`
 
 The benchmark runner retains raw samples and a report. Timings depend on the host and do not measure playing strength. `scripts/play_stockfish.py` runs paired games, while `scripts/match.py --dry-run` prepares a larger Fastchess match.
 
+The Rust library separates chess state, engine search, evaluation, protocol, and training code into matching modules under `src/`. Python build, test, benchmark, match, and packaging tools remain under `scripts/`.
+
 ## Limits and licence
 
 Alekhine currently supports standard chess on one CPU search worker. Chess960, tablebases, GPU inference, distributed training, and full Stockfish evaluation are not implemented. Linux x86-64 testing does not establish support for other platforms or long tournament play.

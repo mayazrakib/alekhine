@@ -4,29 +4,29 @@ use std::sync::atomic::{
     Ordering,
 };
 
-use alekhine::network::Network;
-use alekhine::neural::{
-    encode_features,
-    NEURAL_HIDDEN_COUNT,
-    NEURAL_QUANTIZATION_SCALE,
-    NeuralNetwork,
+use alekhine::chess::position::Position;
+use alekhine::chess::tactical::calculate_exchange_score;
+use alekhine::chess::types::{
+    Color,
+    START_FEN,
 };
-use alekhine::position::Position;
-use alekhine::search::{
+use alekhine::engine::search::{
     Search,
     SearchControl,
     SearchLimits,
     SearchOptions,
 };
-use alekhine::tactical::calculate_exchange_score;
-use alekhine::training::{
+use alekhine::engine::transposition_table::TranspositionTable;
+use alekhine::evaluation::network::Network;
+use alekhine::evaluation::neural::{
+    encode_features,
+    NEURAL_HIDDEN_COUNT,
+    NEURAL_QUANTIZATION_SCALE,
+    NeuralNetwork,
+};
+use alekhine::training::native::{
     train_network,
     TrainingOptions,
-};
-use alekhine::transposition_table::TranspositionTable;
-use alekhine::types::{
-    Color,
-    START_FEN,
 };
 
 static FILE_SEQUENCE: AtomicU64 = AtomicU64::new(0);

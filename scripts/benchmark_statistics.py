@@ -12,25 +12,25 @@ class Distribution(TypedDict):
     standard_deviation: float
     coefficient_of_variation: float
 
-def calculate_distribution(samples: list[float]) -> Distribution:
-    if not samples or any((not math.isfinite(sample)) or (sample < 0) for sample in samples):
-        raise ValueError("Failed to summarize empty, negative, or nonfinite benchmark samples.")
+def calculate_distribution(samples: list[float],) -> Distribution:
+    if not samples or any(((not math.isfinite(sample,)) or (sample < 0) for sample in samples),):
+        raise ValueError("Failed to summarize empty, negative, or nonfinite benchmark samples.",)
 
-    ordered_samples = sorted(samples)
-    percentile_index = (len(samples) - 1) * 0.95
-    lower_index = math.floor(percentile_index)
-    upper_index = math.ceil(percentile_index)
+    ordered_samples = sorted(samples,)
+    percentile_index = (len(samples,) - 1) * 0.95
+    lower_index = math.floor(percentile_index,)
+    upper_index = math.ceil(percentile_index,)
     fraction = percentile_index - lower_index
     p95 = ordered_samples[lower_index] + fraction * (ordered_samples[upper_index] - ordered_samples[lower_index])
-    mean = statistics.mean(samples)
-    standard_deviation = statistics.stdev(samples) if len(samples) > 1 else 0.0
+    mean = statistics.mean(samples,)
+    standard_deviation = statistics.stdev(samples,) if len(samples,) > 1 else 0.0
 
     return {
-        "sample_count": len(samples),
+        "sample_count": len(samples,),
         "minimum": ordered_samples[0],
         "maximum": ordered_samples[-1],
         "mean": mean,
-        "median": statistics.median(samples),
+        "median": statistics.median(samples,),
         "p95": p95,
         "standard_deviation": standard_deviation,
         "coefficient_of_variation": standard_deviation / mean if mean else 0.0,
@@ -64,7 +64,7 @@ class Measurement(TypedDict):
     metric: str
     distribution: Distribution
 
-def summarize_samples(samples: list[Sample]) -> list[Measurement]:
+def summarize_samples(samples: list[Sample],) -> list[Measurement]:
     groups: dict[
         tuple[
             str,
@@ -76,14 +76,14 @@ def summarize_samples(samples: list[Sample]) -> list[Measurement]:
     ] = {}
 
     for sample in samples:
-        if sample.get("phase") != "measured":
+        if sample.get("phase",) != "measured":
             continue
 
         elapsed_nanoseconds = sample["elapsed_nanoseconds"]
         operation_count = sample["operation_count"]
 
         if (elapsed_nanoseconds <= 0) or (operation_count <= 0):
-            raise ValueError("Failed to summarize a benchmark with nonpositive duration or operations.")
+            raise ValueError("Failed to summarize a benchmark with nonpositive duration or operations.",)
 
         metrics = {"nanoseconds_per_operation": elapsed_nanoseconds / operation_count,}
 
@@ -94,15 +94,15 @@ def summarize_samples(samples: list[Sample]) -> list[Measurement]:
             metrics["records_per_second"] = sample["record_count"] * sample["epoch_count"] * 1_000_000_000 / elapsed_nanoseconds
 
         for metric in ["cpu_seconds", "peak_rss_bytes", "overshoot_nanoseconds",]:
-            if sample.get(metric) is not None:
-                metrics[metric] = float(sample[metric])
+            if sample.get(metric,) is not None:
+                metrics[metric] = float(sample[metric],)
 
         for metric, measurement in metrics.items():
             key = (sample["suite"], sample["name"], sample["model"], metric,)
             groups.setdefault(
                 key,
                 [],
-            ).append(measurement)
+            ).append(measurement,)
 
     return [
         {
@@ -110,9 +110,9 @@ def summarize_samples(samples: list[Sample]) -> list[Measurement]:
             "name": key[1],
             "model": key[2],
             "metric": key[3],
-            "distribution": calculate_distribution(measurements),
+            "distribution": calculate_distribution(measurements,),
         }
-        for key, measurements in sorted(groups.items())
+        for key, measurements in sorted(groups.items(),)
     ]
 
 class Comparison(TypedDict):
@@ -129,8 +129,8 @@ def compare_measurements(
     baseline: list[Measurement],
     maximum_regression_percent: float,
 ) -> list[Comparison]:
-    if (not math.isfinite(maximum_regression_percent)) or (maximum_regression_percent < 0):
-        raise ValueError("Failed to compare benchmarks with an invalid regression threshold.")
+    if (not math.isfinite(maximum_regression_percent,)) or (maximum_regression_percent < 0):
+        raise ValueError("Failed to compare benchmarks with an invalid regression threshold.",)
 
     candidate_latencies = {
         (measurement["suite"], measurement["name"], measurement["model"],): measurement["distribution"]["median"]
@@ -142,15 +142,15 @@ def compare_measurements(
     }
 
     if (not candidate_latencies) or (candidate_latencies.keys() != baseline_latencies.keys()):
-        raise ValueError("Failed to compare benchmarks with mismatched workloads.")
+        raise ValueError("Failed to compare benchmarks with mismatched workloads.",)
 
     comparisons = []
 
-    for key, candidate_median in sorted(candidate_latencies.items()):
+    for key, candidate_median in sorted(candidate_latencies.items(),):
         baseline_median = baseline_latencies[key]
 
-        if (baseline_median <= 0) or (not math.isfinite(baseline_median)) or (not math.isfinite(candidate_median)):
-            raise ValueError("Failed to compare benchmarks with invalid median durations.")
+        if (baseline_median <= 0) or (not math.isfinite(baseline_median,)) or (not math.isfinite(candidate_median,)):
+            raise ValueError("Failed to compare benchmarks with invalid median durations.",)
 
         change_percent = (candidate_median / baseline_median - 1) * 100
         comparisons.append({
@@ -161,6 +161,6 @@ def compare_measurements(
             "candidate_median_nanoseconds": candidate_median,
             "change_percent": change_percent,
             "has_regressed": change_percent > maximum_regression_percent,
-        })
+        },)
 
     return comparisons

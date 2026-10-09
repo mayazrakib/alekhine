@@ -10,25 +10,25 @@ use std::io::{
 use std::path::Path;
 use std::time::Instant;
 
-use alekhine::network::Network;
-use alekhine::neural::encode_features;
-use alekhine::position::{
+use alekhine::chess::position::{
     count_perft,
     Position,
 };
-use alekhine::search::{
+use alekhine::chess::tactical::calculate_exchange_score;
+use alekhine::chess::types::START_FEN;
+use alekhine::engine::search::{
     Search,
     SearchControl,
     SearchLimits,
     SearchOptions,
     SearchResult,
 };
-use alekhine::tactical::calculate_exchange_score;
-use alekhine::transposition_table::{
+use alekhine::engine::transposition_table::{
     BoundType,
     TranspositionTable,
 };
-use alekhine::types::START_FEN;
+use alekhine::evaluation::network::Network;
+use alekhine::evaluation::neural::encode_features;
 
 type BenchmarkResult<T> = Result<
     T,

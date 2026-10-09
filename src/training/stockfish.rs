@@ -2,8 +2,8 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
-use crate::neural::NEURAL_SCORE_SCALE;
-use crate::stockfish_network::{
+use crate::evaluation::neural::NEURAL_SCORE_SCALE;
+use crate::evaluation::stockfish_network::{
     DENSE_BIAS_SCALE,
     DENSE_FIRST_OUTPUT_COUNT,
     DENSE_FORWARD_SCALE,
@@ -16,7 +16,7 @@ use crate::stockfish_network::{
     StockfishFeatures,
     StockfishNetwork,
 };
-use crate::training::{
+use crate::training::native::{
     ADAM_EPSILON,
     ADAM_FIRST_DECAY,
     ADAM_SECOND_DECAY,
@@ -27,7 +27,7 @@ use crate::training::{
     TrainingOptions,
     WEIGHT_DECAY,
 };
-use crate::types::{
+use crate::chess::types::{
     EngineError,
     EngineResult,
 };
@@ -554,13 +554,13 @@ mod tests {
         CachedRecord,
         FloatingStack,
     };
-    use crate::stockfish_network::{
+    use crate::evaluation::stockfish_network::{
         DenseLayer,
         DenseStack,
         STOCKFISH_BUCKET_COUNT,
         StockfishFeatures,
     };
-    use crate::training::TrainingOptions;
+    use crate::training::native::TrainingOptions;
 
     fn create_stack() -> FloatingStack {
         let dense_stack = DenseStack {

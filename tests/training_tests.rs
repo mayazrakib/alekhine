@@ -5,14 +5,14 @@ use std::sync::atomic::{
     Ordering,
 };
 
-use alekhine::network::Network;
-use alekhine::neural::NeuralNetwork;
-use alekhine::position::Position;
-use alekhine::training::{
+use alekhine::chess::position::Position;
+use alekhine::chess::types::START_FEN;
+use alekhine::evaluation::network::Network;
+use alekhine::evaluation::neural::NeuralNetwork;
+use alekhine::training::native::{
     train_network,
     TrainingOptions,
 };
-use alekhine::types::START_FEN;
 
 const TRAINING_RECORDS: &str = concat!(
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 | 100 | 1 | e2e4:0.7 d2d4:0.3 | game_0\n",
@@ -110,7 +110,7 @@ fn test_training_is_reproducible_and_exports_loadable_artifacts() {
         &position,
         &network.build_accumulator(&position),
     );
-    assert!(score.abs() < alekhine::types::MATE_THRESHOLD);
+    assert!(score.abs() < alekhine::chess::types::MATE_THRESHOLD);
     let manifest = fs::read_to_string(fixture.output_path.with_extension("training.json")).unwrap();
     assert!(manifest.contains(&format!("\"network_fingerprint\": {}", first.network_fingerprint)));
     assert!(manifest.contains(&format!("\"dataset_fnv_fingerprint\": {}", first.dataset_fingerprint)));
