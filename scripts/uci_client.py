@@ -22,13 +22,15 @@ SearchResponse = tuple[
     float,
 ]
 
-class PrincipalVariation(TypedDict):
+class PrincipalVariation(TypedDict,):
     depth_plies: int
     variation_index: int
+
     score_kind: Literal[
         "cp",
         "mate",
     ]
+
     score: int
     moves: list[str]
 
@@ -46,17 +48,21 @@ class UciClient:
             text=True,
             bufsize=1,
         )
+
         self.lines: queue.Queue[str | None] = queue.Queue(maxsize=1024,)
         self.diagnostics: deque[str] = deque(maxlen=128,)
         self.should_close = threading.Event()
+
         self.output_thread = threading.Thread(
             target=self.read_output,
             daemon=True,
         )
+
         self.error_thread = threading.Thread(
             target=self.read_errors,
             daemon=True,
         )
+
         self.output_thread.start()
         self.error_thread.start()
         self.identity = ""
@@ -65,6 +71,7 @@ class UciClient:
 
         try:
             self.send_command("uci",)
+
             handshake = self.wait_for_line(
                 "uciok",
                 20.0,
@@ -84,6 +91,7 @@ class UciClient:
                 self.send_command(f"setoption name {name} value {option_value}",)
 
             self.send_command("isready",)
+
             readiness = self.wait_for_line(
                 "readyok",
                 20.0,
@@ -188,14 +196,17 @@ class UciClient:
     def start_game(self,) -> None:
         if self.is_searching:
             self.send_command("stop",)
+
             self.wait_for_line(
                 "bestmove ",
                 2.0,
             )
+
             self.is_searching = False
 
         self.send_command("ucinewgame",)
         self.send_command("isready",)
+
         self.wait_for_line(
             "readyok",
             20.0,
@@ -211,10 +222,12 @@ class UciClient:
         started_at_seconds = time.monotonic()
         self.is_searching = True
         self.send_command(search_command,)
+
         transcript = self.wait_for_line(
             "bestmove ",
             timeout_seconds,
         )
+
         elapsed_seconds = time.monotonic() - started_at_seconds
         self.is_searching = False
         bestmove_tokens = transcript[-1].split()
@@ -302,6 +315,7 @@ def parse_variations(transcript: list[str],) -> list[PrincipalVariation]:
                 "score": score,
                 "moves": moves,
             }
+
             depths.setdefault(
                 depth,
                 {},

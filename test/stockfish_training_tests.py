@@ -33,13 +33,13 @@ BUCKET_BYTES = 3304
 ENGINE_PATH = PROJECT_DIRECTORY / "build/release/alekhine"
 STOCKFISH_PATH = Path("/usr/bin/stockfish",)
 
-class BucketScores(TypedDict):
+class BucketScores(TypedDict,):
     bucket_index: int
     psqt_score: int
     positional_score: int
     centipawn_score: int
 
-class NetworkInspection(TypedDict):
+class NetworkInspection(TypedDict,):
     hidden_width: int
     network_fingerprint: int
     bucket_index: int
@@ -66,6 +66,7 @@ def encode_block(payload: bytes,) -> bytes:
 
 def create_fixture_bytes() -> bytes:
     description = b"Original synthetic format and optimizer fixture."
+
     header = struct.pack(
         "<III",
         VERSION,
@@ -75,7 +76,9 @@ def create_fixture_bytes() -> bytes:
         "<I",
         TRANSFORMER_HASH,
     )
+
     transformer = encode_block(encode_signed(100,) * 128,) + encode_block(bytes(22528 * 128,),) + encode_block(bytes(22528 * 8,),)
+
     stack = struct.pack(
         "<I",
         STACK_HASH,
@@ -97,7 +100,7 @@ def create_dataset() -> str:
         for line in TRAINING_RECORDS.splitlines()
         if (fields := line.split("|",))),) + "\n"
 
-class NetworkProcessTests(unittest.TestCase):
+class NetworkProcessTests(unittest.TestCase,):
     def setUp(self,) -> None:
         self.directory = tempfile.TemporaryDirectory(prefix="alekhine_stockfish_training_",)
         self.addCleanup(self.directory.cleanup,)
@@ -118,6 +121,7 @@ class NetworkProcessTests(unittest.TestCase):
             text=True,
             timeout=60.0,
         )
+
         self.assertEqual(
             completed.returncode == 0,
             is_success_expected,
@@ -132,16 +136,20 @@ class NetworkProcessTests(unittest.TestCase):
         options: list[str],
     ) -> Path:
         output_path = self.root / name
+
         settings = {
             "--batch_size": "2",
             "--learning_rate": "0.01",
             "--seed": "42",
         }
+
         settings.update(dict(zip(
             options[::2],
             options[1::2],
         ),),)
+
         configured_options = [part for key, option in settings.items() for part in [key, option,]]
+
         self.run_engine([
             "fine_tune_stockfish",
             str(self.source_path,),
@@ -158,13 +166,15 @@ class NetworkProcessTests(unittest.TestCase):
     ) -> NetworkInspection:
         return json.loads(self.run_engine(["inspect_stockfish_network", str(path,),],).stdout,)
 
-class StockfishFormatTests(NetworkProcessTests):
+class StockfishFormatTests(NetworkProcessTests,):
     def test_synthetic_format_has_exact_integer_zero_scores(self,) -> None:
         report = self.inspect_model(self.source_path,)
+
         self.assertEqual(
             report["hidden_width"],
             128,
         )
+
         self.assertEqual(
             [bucket["centipawn_score"] for bucket in report["buckets"]],
             [0,] * 8,
@@ -175,33 +185,41 @@ class StockfishFormatTests(NetworkProcessTests):
             "trained.nnue",
             [],
         )
+
         source = self.source_path.read_bytes()
         trained = output_path.read_bytes()
         frozen_end = len(source,) - 8 * BUCKET_BYTES
+
         self.assertEqual(
             trained[:frozen_end],
             source[:frozen_end],
         )
+
         self.assertEqual(
             trained[frozen_end:frozen_end + 7 * BUCKET_BYTES],
             source[frozen_end:frozen_end + 7 * BUCKET_BYTES],
         )
+
         self.assertNotEqual(
             trained,
             source,
         )
+
         manifest = json.loads(output_path.with_suffix(".training.json",).read_text(),)
         self.assertTrue(manifest["is_feature_transformer_frozen"],)
         self.assertTrue(manifest["are_psqt_weights_frozen"],)
         self.assertFalse(manifest["are_policy_targets_used"],)
+
         self.assertGreater(
             manifest["changed_parameter_count"],
             0,
         )
+
         self.assertLess(
             manifest["best_validation_loss"],
             manifest["initial_validation_loss"],
         )
+
         self.assertEqual(
             manifest["network_fingerprint"],
             self.inspect_model(output_path,)["network_fingerprint"],
@@ -212,19 +230,24 @@ class StockfishFormatTests(NetworkProcessTests):
             "first.nnue",
             [],
         )
+
         second_path = self.train_model(
             "second.nnue",
             [],
         )
+
         self.assertEqual(
             first_path.read_bytes(),
             second_path.read_bytes(),
         )
+
         original = first_path.read_bytes()
+
         self.run_engine(
             ["fine_tune_stockfish", str(self.source_path,), str(self.dataset_path,), str(first_path,),],
             False,
         )
+
         self.assertEqual(
             first_path.read_bytes(),
             original,
@@ -235,11 +258,14 @@ class StockfishFormatTests(NetworkProcessTests):
             "unchanged.nnue",
             ["--learning_rate", "0.000000001",],
         )
+
         self.assertEqual(
             output_path.read_bytes(),
             self.source_path.read_bytes(),
         )
+
         manifest = json.loads(output_path.with_suffix(".training.json",).read_text(),)
+
         self.assertEqual(
             manifest["best_epoch"],
             0,
@@ -249,12 +275,15 @@ class StockfishFormatTests(NetworkProcessTests):
         first_path = self.root / "first.nnue"
         arguments = ["fine_tune_stockfish", str(self.source_path,), str(self.dataset_path,), str(first_path,), "1", "--learning_rate", "0.01",]
         first = self.run_engine(arguments,)
+
         self.dataset_path.write_text(create_dataset().replace(
             "1000 | 1 | ? | game_3",
             "-1000 | 0 | ? | game_3",
         ),)
+
         arguments[3] = str(self.root / "second.nnue",)
         second = self.run_engine(arguments,)
+
         self.assertEqual(
             re.search(
                 r"training loss ([0-9.]+)",
@@ -265,12 +294,15 @@ class StockfishFormatTests(NetworkProcessTests):
                 second.stdout,
             ).group(1,),
         )
+
         first_manifest = json.loads(first_path.with_suffix(".training.json",).read_text(),)
         second_manifest = json.loads((self.root / "second.training.json").read_text(),)
+
         self.assertGreater(
             first_manifest["best_epoch"],
             0,
         )
+
         self.assertEqual(
             second_manifest["best_epoch"],
             0,
@@ -278,6 +310,7 @@ class StockfishFormatTests(NetworkProcessTests):
 
     def test_dataset_deduplicates_before_splitting(self,) -> None:
         first_line = create_dataset().splitlines()[0]
+
         self.dataset_path.write_text(create_dataset() + first_line.replace(
             "0 1 |",
             "1 2 |",
@@ -285,11 +318,14 @@ class StockfishFormatTests(NetworkProcessTests):
             "game_0",
             "game_3",
         ) + "\n",)
+
         output_path = self.train_model(
             "deduplicated.nnue",
             [],
         )
+
         manifest = json.loads(output_path.with_suffix(".training.json",).read_text(),)
+
         self.assertEqual(
             [manifest["training_record_count"], manifest["validation_record_count"], manifest["duplicate_record_count"],],
             [2, 1, 1,],
@@ -302,6 +338,7 @@ class StockfishFormatTests(NetworkProcessTests):
 
         for invalid in [original[:100], original[:-1], original + b"x", invalid_architecture,]:
             self.source_path.write_bytes(invalid,)
+
             self.run_engine(
                 ["inspect_stockfish_network", str(self.source_path,),],
                 False,
@@ -310,18 +347,22 @@ class StockfishFormatTests(NetworkProcessTests):
     def test_invalid_training_inputs_do_not_create_outputs(self,) -> None:
         for options in [["--learning_rate", "nan",], ["--batch_size", "0",], ["--maximum_record_count", "2",],]:
             output_path = self.root / "rejected.nnue"
+
             self.run_engine(
                 ["fine_tune_stockfish", str(self.source_path,), str(self.dataset_path,), str(output_path,),] + options,
                 False,
             )
+
             self.assertFalse(output_path.exists(),)
             self.assertFalse(output_path.with_suffix(".training.json",).exists(),)
 
         self.dataset_path.write_text("Invalid FEN | 0 | - | - | game\n",)
+
         self.run_engine(
             ["fine_tune_stockfish", str(self.source_path,), str(self.dataset_path,), str(output_path,),],
             False,
         )
+
         self.assertFalse(output_path.exists(),)
 
     def test_stockfish_model_loads_through_uci_and_survives_weight_resume(self,) -> None:
@@ -329,38 +370,46 @@ class StockfishFormatTests(NetworkProcessTests):
             "trained.nnue",
             [],
         )
+
         client = UciClient(
             ENGINE_PATH,
             {"EvalFile": str(output_path,),},
         )
+
         self.addCleanup(client.close_process,)
         client.send_command("position startpos",)
         client.send_command("go nodes 32",)
+
         transcript = client.wait_for_line(
             "bestmove",
             20.0,
         )
+
         self.assertRegex(
             transcript[-1],
             r"^bestmove [a-h][1-8][a-h][1-8]",
         )
+
         self.source_path = output_path
+
         export_path = self.train_model(
             "resumed.nnue",
             ["--learning_rate", "0.000000001",],
         )
+
         self.assertEqual(
             export_path.read_bytes(),
             output_path.read_bytes(),
         )
 
-class RealStockfishTests(NetworkProcessTests):
+class RealStockfishTests(NetworkProcessTests,):
     @classmethod
     def setUpClass(cls,) -> None:
         cls.network_directory = tempfile.TemporaryDirectory(prefix="alekhine_real_stockfish_weights_",)
         cls.addClassCleanup(cls.network_directory.cleanup,)
         cls.big_path = Path(cls.network_directory.name,) / "big.nnue"
         cls.small_path = Path(cls.network_directory.name,) / "small.nnue"
+
         completed = subprocess.run(
             [str(STOCKFISH_PATH,),],
             input=f"export_net {cls.big_path} {cls.small_path}\nquit\n",
@@ -378,12 +427,15 @@ class RealStockfishTests(NetworkProcessTests):
                 ENGINE_PATH,
                 {"EvalFile": str(source_path,),},
             )
+
             self.addCleanup(client.close_process,)
             self.source_path = source_path
+
             output_path = self.train_model(
                 source_path.name,
                 ["--learning_rate", "0.000000001",],
             )
+
             self.assertEqual(
                 output_path.read_bytes(),
                 source_path.read_bytes(),
@@ -411,15 +463,18 @@ class RealStockfishTests(NetworkProcessTests):
             "7k/8/8/8/8/8/PPPP4/K7 w - - 0 1",
             "7k/8/8/8/8/NNNN4/PPPP4/K7 w - - 0 1",
         ]
+
         original_pieces = chess.Board().piece_map()
         nonking_squares = sorted((square for square, piece in original_pieces.items() if piece.piece_type != chess.KING),)
 
         for piece_count in [2, 5, 9, 13, 17, 21, 25, 29,]:
             phase_board = chess.Board.empty()
+
             phase_board.set_piece_at(
                 chess.E1,
                 original_pieces[chess.E1],
             )
+
             phase_board.set_piece_at(
                 chess.E8,
                 original_pieces[chess.E8],
@@ -438,10 +493,12 @@ class RealStockfishTests(NetworkProcessTests):
             len(positions,),
             32,
         )
+
         client = UciClient(
             STOCKFISH_PATH,
             {"EvalFile": str(self.big_path,), "EvalFileSmall": str(self.small_path,),},
         )
+
         self.addCleanup(client.close_process,)
 
         for fen in positions:
@@ -450,10 +507,12 @@ class RealStockfishTests(NetworkProcessTests):
             client.send_command(f"position fen {fen}",)
             client.send_command("eval",)
             client.send_command("isready",)
+
             transcript = client.wait_for_line(
                 "readyok",
                 20.0,
             )
+
             rows = [
                 line.split("|",)[1:5]
                 for line in transcript
@@ -462,6 +521,7 @@ class RealStockfishTests(NetworkProcessTests):
                     line,
                 )
             ]
+
             self.assertEqual(
                 len(rows,),
                 8,
@@ -479,6 +539,7 @@ class RealStockfishTests(NetworkProcessTests):
                     ),) * 100,)
                     for field in row[1:]
                 ]
+
                 actual_scores = [
                     round(bucket["psqt_score"] * report["centipawn_scale"],),
                     round(bucket["positional_score"] * report["centipawn_scale"],),
@@ -497,26 +558,33 @@ class RealStockfishTests(NetworkProcessTests):
 
     def test_modified_small_network_loads_and_searches_in_stockfish(self,) -> None:
         self.source_path = self.small_path
+
         output_path = self.train_model(
             "modified_small.nnue",
             [],
         )
+
         manifest = json.loads(output_path.with_suffix(".training.json",).read_text(),)
+
         self.assertGreater(
             manifest["changed_parameter_count"],
             0,
         )
+
         client = UciClient(
             STOCKFISH_PATH,
             {"EvalFileSmall": str(output_path,),},
         )
+
         self.addCleanup(client.close_process,)
         client.send_command("position fen 7k/8/8/8/8/8/Q1Q5/K7 w - - 0 1",)
         client.send_command("go nodes 64",)
+
         transcript = client.wait_for_line(
             "bestmove",
             20.0,
         )
+
         self.assertRegex(
             transcript[-1],
             r"^bestmove [a-h][1-8][a-h][1-8]",
@@ -529,13 +597,16 @@ class RealStockfishTests(NetworkProcessTests):
             STOCKFISH_PATH,
             {"EvalFile": str(self.big_path,), "EvalFileSmall": str(self.small_path,),},
         )
+
         self.addCleanup(client.close_process,)
+
         positions = [
             "7k/8/8/8/8/8/Q1Q5/K7 w - - 0 1",
             "7k/8/8/8/8/8/Q1Q5/K7 b - - 0 1",
             "7k/8/8/8/8/8/Q1Q5/K7 w - - 50 1",
             "7k/5p2/8/8/8/8/R1R5/K7 w - - 0 1",
         ]
+
         nonpawn_weights = {
             chess.KNIGHT: 781,
             chess.BISHOP: 825,
@@ -549,23 +620,28 @@ class RealStockfishTests(NetworkProcessTests):
             report = json.loads(self.run_engine(["inspect_stockfish_network", str(self.small_path,), fen,],).stdout,)
             scores = report["buckets"][report["bucket_index"]]
             blended_score = math.trunc((125 * scores["psqt_score"] + 131 * scores["positional_score"]) / 128,)
+
             self.assertGreater(
                 abs(blended_score,),
                 277,
             )
+
             complexity = abs(scores["psqt_score"] - scores["positional_score"],)
             corrected_score = blended_score - math.trunc(blended_score * complexity / 18236,)
+
             nonpawn_material = sum((weight * len(board.pieces(
                 piece_type,
                 color,
             ),)
                 for piece_type, weight in nonpawn_weights.items()
                 for color in [chess.WHITE, chess.BLACK,]),)
+
             pawn_count = sum((len(board.pieces(
                 chess.PAWN,
                 color,
             ),)
                 for color in [chess.WHITE, chess.BLACK,]),)
+
             scaled_score = math.trunc(corrected_score * (77871 + nonpawn_material + 534 * pawn_count) / 77871,)
             damped_score = scaled_score - math.trunc(scaled_score * board.halfmove_clock / 199,)
             side_sign = 1 if board.turn == chess.WHITE else -1
@@ -573,12 +649,15 @@ class RealStockfishTests(NetworkProcessTests):
             client.send_command(f"position fen {fen}",)
             client.send_command("eval",)
             client.send_command("isready",)
+
             transcript = client.wait_for_line(
                 "readyok",
                 20.0,
             )
+
             final_line = next((line for line in transcript if line.startswith("Final evaluation ",)),)
             actual_score = round(float(final_line.split()[2],) * 100,)
+
             self.assertEqual(
                 expected_score,
                 actual_score,
@@ -587,11 +666,14 @@ class RealStockfishTests(NetworkProcessTests):
 
     def test_modified_big_network_loads_and_searches_in_stockfish_and_alekhine(self,) -> None:
         self.source_path = self.big_path
+
         output_path = self.train_model(
             "modified_big.nnue",
             [],
         )
+
         manifest = json.loads(output_path.with_suffix(".training.json",).read_text(),)
+
         self.assertGreater(
             manifest["changed_parameter_count"],
             0,
@@ -602,13 +684,16 @@ class RealStockfishTests(NetworkProcessTests):
                 executable,
                 {"EvalFile": str(output_path,),},
             )
+
             self.addCleanup(client.close_process,)
             client.send_command("position startpos",)
             client.send_command("go nodes 64",)
+
             transcript = client.wait_for_line(
                 "bestmove",
                 20.0,
             )
+
             self.assertRegex(
                 transcript[-1],
                 r"^bestmove [a-h][1-8][a-h][1-8]",
@@ -617,14 +702,17 @@ class RealStockfishTests(NetworkProcessTests):
 def run_tests() -> None:
     global ENGINE_PATH, STOCKFISH_PATH
     parser = argparse.ArgumentParser(description="Verify original Stockfish-format loading, fine-tuning, and export.",)
+
     parser.add_argument(
         "engine_path",
         type=Path,
     )
+
     parser.add_argument(
         "--stockfish",
         type=Path,
     )
+
     arguments = parser.parse_args()
     ENGINE_PATH = arguments.engine_path.resolve()
     loader = unittest.TestLoader()

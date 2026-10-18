@@ -27,7 +27,7 @@ from uci_client import (
     parse_variations,
 )
 
-class ProtocolClientTests(unittest.TestCase):
+class ProtocolClientTests(unittest.TestCase,):
     def setUp(self,) -> None:
         self.directory = tempfile.TemporaryDirectory(prefix="alekhine_protocol_tests_",)
         self.addCleanup(self.directory.cleanup,)
@@ -41,29 +41,35 @@ class ProtocolClientTests(unittest.TestCase):
             self.fixture_path,
             options,
         )
+
         self.addCleanup(client.close_process,)
 
         return client
 
     def test_handshake_search_and_cleanup_reap_process_and_threads(self,) -> None:
         client = self.create_client({"Hash": "1",},)
+
         best_move, transcript, elapsed_seconds = client.search_position(
             "position startpos",
             "go depth 2",
             5.0,
         )
+
         self.assertEqual(
             best_move,
             "e2e4",
         )
+
         self.assertEqual(
             len(parse_variations(transcript,),),
             1,
         )
+
         self.assertGreaterEqual(
             elapsed_seconds,
             0.0,
         )
+
         client.close_process()
         self.assertIsNotNone(client.process.poll(),)
         self.assertFalse(client.output_thread.is_alive(),)
@@ -83,11 +89,13 @@ class ProtocolClientTests(unittest.TestCase):
         client.start_game()
         self.assertFalse(client.is_searching,)
         client.send_command("setoption name fault_mode value normal",)
+
         best_move, transcript, elapsed_seconds = client.search_position(
             "position startpos",
             "go depth 1",
             5.0,
         )
+
         self.assertEqual(
             best_move,
             "e2e4",
@@ -104,10 +112,12 @@ class ProtocolClientTests(unittest.TestCase):
             )
 
         client.close_process()
+
         self.assertEqual(
             client.process.returncode,
             1,
         )
+
         self.assertIn(
             "Forced fixture termination.",
             client.diagnostics,
@@ -147,6 +157,7 @@ class ProtocolClientTests(unittest.TestCase):
                     client.send_command(command,)
 
         client.send_command("isready",)
+
         self.assertEqual(
             client.wait_for_line(
                 "readyok",
@@ -175,16 +186,18 @@ class ProtocolClientTests(unittest.TestCase):
             "info depth 2 multipv 2 score cp -50 pv d2d4",
             "info depth 2 multipv 1 score mate -3 pv e2e4 e7e5",
         ],)
+
         self.assertEqual(
             [report["variation_index"] for report in reports],
             [1, 2,],
         )
+
         self.assertEqual(
             (reports[0]["score_kind"], reports[0]["score"],),
             ("mate", -3,),
         )
 
-class MatchCommandTests(unittest.TestCase):
+class MatchCommandTests(unittest.TestCase,):
     def setUp(self,) -> None:
         self.directory = tempfile.TemporaryDirectory(prefix="alekhine_match_command_",)
         self.addCleanup(self.directory.cleanup,)
@@ -228,6 +241,7 @@ class MatchCommandTests(unittest.TestCase):
             command.count("option.Hash=16",),
             2,
         )
+
         self.assertFalse((self.root / "results").exists(),)
 
     def test_identical_binary_requires_distinct_option_configurations(self,) -> None:
@@ -238,6 +252,7 @@ class MatchCommandTests(unittest.TestCase):
             match.build_match_command(arguments,)
 
         arguments.candidate_option = ["Policy Simulations=0",]
+
         self.assertIn(
             "option.Policy Simulations=0",
             match.build_match_command(arguments,),
@@ -250,6 +265,7 @@ class MatchCommandTests(unittest.TestCase):
                 setting=invalid_setting,
             ):
                 arguments = self.create_arguments()
+
                 setattr(
                     arguments,
                     name,
@@ -273,7 +289,7 @@ class MatchCommandTests(unittest.TestCase):
             "Preserved results.\n",
         )
 
-class PackageTests(unittest.TestCase):
+class PackageTests(unittest.TestCase,):
     def setUp(self,) -> None:
         self.directory = tempfile.TemporaryDirectory(prefix="alekhine_package_tests_",)
         self.addCleanup(self.directory.cleanup,)
@@ -282,11 +298,13 @@ class PackageTests(unittest.TestCase):
         build_directory.mkdir(parents=True,)
         self.binary_path = build_directory / "alekhine"
         self.binary_path.write_bytes(b"Test executable payload.\n",)
+
         manifest = {
             "version": "0.1.0",
             "target_architecture": "test_target",
             "binary_sha256": hashlib.sha256(self.binary_path.read_bytes(),).hexdigest(),
         }
+
         (build_directory / "build_manifest.json").write_text(json.dumps(manifest,),)
 
         for filename in ["LICENSE", "README.md", "project.toml", "Cargo.toml",]:
@@ -296,11 +314,13 @@ class PackageTests(unittest.TestCase):
             mode="release",
             output=self.root / "dist",
         )
+
         self.project_patch = patch.object(
             package,
             "PROJECT_DIRECTORY",
             self.root,
         )
+
         self.project_patch.start()
         self.addCleanup(self.project_patch.stop,)
 
@@ -313,6 +333,7 @@ class PackageTests(unittest.TestCase):
                 archive.extractfile(f"{archive_prefix}/bin/alekhine",).read(),
                 self.binary_path.read_bytes(),
             )
+
             self.assertIn(
                 f"{archive_prefix}/build_manifest.json",
                 archive.getnames(),

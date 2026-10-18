@@ -21,10 +21,12 @@ def count_reference_perft(
 
     for move in board.legal_moves:
         board.push(move,)
+
         node_count += count_reference_perft(
             board,
             depth_plies - 1,
         )
+
         board.pop()
 
     return node_count
@@ -39,6 +41,7 @@ def verify_positions(arguments: argparse.Namespace,) -> None:
             board = chess.Board(START_FEN if (position_index % 320 == 0) else KIWIPETE_FEN,)
 
         fen = board.fen(en_passant="fen",)
+
         engine_process = subprocess.run(
             [str(arguments.engine.resolve(),), "divide", str(arguments.depth_plies,), fen,],
             check=True,
@@ -46,6 +49,7 @@ def verify_positions(arguments: argparse.Namespace,) -> None:
             text=True,
             timeout=30.0,
         )
+
         engine_counts = {}
 
         for line in engine_process.stdout.splitlines():
@@ -55,6 +59,7 @@ def verify_positions(arguments: argparse.Namespace,) -> None:
                 engine_counts[match[1]] = int(match[2],)
 
         reference_counts = {}
+
         legal_moves = sorted(
             board.legal_moves,
             key=lambda move: move.uci(),
@@ -62,10 +67,12 @@ def verify_positions(arguments: argparse.Namespace,) -> None:
 
         for move in legal_moves:
             board.push(move,)
+
             reference_counts[move.uci()] = count_reference_perft(
                 board,
                 arguments.depth_plies - 1,
             )
+
             board.pop()
 
         if engine_counts != reference_counts:
@@ -84,26 +91,31 @@ def verify_positions(arguments: argparse.Namespace,) -> None:
 
 def run_verification() -> None:
     parser = argparse.ArgumentParser(description="Compare legal moves and perft against python-chess on deterministic random legal positions.",)
+
     parser.add_argument(
         "engine",
         type=Path,
     )
+
     parser.add_argument(
         "--positions",
         type=int,
         default=1000,
     )
+
     parser.add_argument(
         "--depth",
         dest="depth_plies",
         type=int,
         default=2,
     )
+
     parser.add_argument(
         "--seed",
         type=int,
         default=20261004,
     )
+
     arguments = parser.parse_args()
 
     if not (1 <= arguments.positions <= 100000) or not (1 <= arguments.depth_plies <= 4):

@@ -24,61 +24,73 @@ def compute_digest(path: Path,) -> str:
 
 def run_games() -> None:
     parser = argparse.ArgumentParser(description="Play paired, clocked games against Stockfish and retain PGN, protocol responses, and provenance.",)
+
     parser.add_argument(
         "--candidate",
         type=Path,
         default=PROJECT_DIRECTORY / "build/release/alekhine",
     )
+
     parser.add_argument(
         "--stockfish",
         type=Path,
         default=Path(shutil.which("stockfish",) or "stockfish",),
     )
+
     parser.add_argument(
         "--openings",
         type=Path,
         default=PROJECT_DIRECTORY / "test/openings.epd",
     )
+
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--pairs",
         type=int,
         default=4,
     )
+
     parser.add_argument(
         "--clock_milliseconds",
         type=int,
         default=30000,
     )
+
     parser.add_argument(
         "--increment_milliseconds",
         type=int,
         default=100,
     )
+
     parser.add_argument(
         "--maximum_plies",
         type=int,
         default=512,
     )
+
     parser.add_argument(
         "--seed",
         type=int,
         default=20261004,
     )
+
     parser.add_argument(
         "--candidate_option",
         action="append",
         default=[],
     )
+
     parser.add_argument(
         "--stockfish_option",
         action="append",
         default=[],
     )
+
     arguments = parser.parse_args()
     clients = []
 
@@ -115,6 +127,7 @@ def run_games() -> None:
                 "id",
                 "Opening position",
             ),)
+
             openings.append((board.fen(), opening_name,),)
 
         if not openings:
@@ -122,20 +135,26 @@ def run_games() -> None:
 
         random.Random(arguments.seed,).shuffle(openings,)
         binary_digests = [compute_digest(arguments.candidate,), compute_digest(arguments.stockfish,),]
+
         candidate = UciClient(
             arguments.candidate,
             candidate_options,
         )
+
         clients.append(candidate,)
+
         stockfish = UciClient(
             arguments.stockfish,
             stockfish_options,
         )
+
         clients.append(stockfish,)
+
         arguments.output.mkdir(
             parents=True,
             exist_ok=False,
         )
+
         manifest = {
             "candidate": {
                 "path": str(arguments.candidate.resolve(),),
@@ -171,6 +190,7 @@ def run_games() -> None:
             manifest,
             indent=4,
         ) + "\n",)
+
         wins = 0
         draws = 0
         losses = 0
@@ -215,10 +235,12 @@ def run_games() -> None:
                             1,
                             int(remaining_milliseconds[chess.WHITE],),
                         )
+
                         black_milliseconds = max(
                             1,
                             int(remaining_milliseconds[chess.BLACK],),
                         )
+
                         search_command = f"go wtime {white_milliseconds} btime {black_milliseconds} winc {arguments.increment_milliseconds} binc {arguments.increment_milliseconds}"
 
                         try:
@@ -235,6 +257,7 @@ def run_games() -> None:
                             break
 
                         remaining_milliseconds[moving_color] -= elapsed_seconds * 1000
+
                         protocol_output.write(json.dumps({
                             "pair_index": pair_index,
                             "color_index": color_index,
@@ -246,6 +269,7 @@ def run_games() -> None:
                             "elapsed_milliseconds": elapsed_seconds * 1000,
                             "response": transcript,
                         },) + "\n",)
+
                         protocol_output.flush()
 
                         if remaining_milliseconds[moving_color] < 0:
@@ -283,6 +307,7 @@ def run_games() -> None:
                             termination = "Draw adjudicated at the configured ply limit."
                         else:
                             winner = outcome.winner
+
                             termination = outcome.termination.name.lower().replace(
                                 "_",
                                 " ",
@@ -295,6 +320,7 @@ def run_games() -> None:
                     losses += int(score == 0.0,)
                     game.headers["Result"] = "1/2-1/2" if winner is None else "1-0" if winner == chess.WHITE else "0-1"
                     game.headers["Termination"] = termination
+
                     game_record = {
                         "pair_index": pair_index,
                         "candidate_color": "white" if candidate_color == chess.WHITE else "black",
@@ -304,13 +330,17 @@ def run_games() -> None:
                         "ply_count": len(moves,),
                         "has_forfeit": has_forfeit,
                     }
+
                     games.append(game_record,)
+
                     print(
                         f"Completed game {len(games,)}: candidate score {score:g}; {termination}",
                         flush=True,
                     )
+
                     pgn_output.write(str(game,) + "\n\n",)
                     pgn_output.flush()
+
                     summary = {
                         "wins": wins,
                         "draws": draws,
@@ -320,6 +350,7 @@ def run_games() -> None:
                         "pentanomial_counts": pentanomial_counts,
                         "is_complete": False,
                     }
+
                     (arguments.output / "summary.json").write_text(json.dumps(
                         summary,
                         indent=4,
@@ -333,10 +364,12 @@ def run_games() -> None:
         summary["pentanomial_counts"] = pentanomial_counts
         summary["is_complete"] = True
         summary["completed_at_unix_seconds"] = time.time()
+
         (arguments.output / "summary.json").write_text(json.dumps(
             summary,
             indent=4,
         ) + "\n",)
+
         print(f"Completed {len(games,)} games: {wins} wins, {draws} draws, and {losses} losses. Results are in {arguments.output}.",)
     except ImportError as error:
         parser.exit(

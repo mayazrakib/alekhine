@@ -19,17 +19,21 @@ class EngineProcess:
             text=True,
             bufsize=1,
         )
+
         self.lines: queue.Queue[str | None] = queue.Queue()
         self.transcript: list[str] = []
         self.stderr_lines: list[str] = []
+
         self.output_thread = threading.Thread(
             target=self.read_output,
             daemon=True,
         )
+
         self.error_thread = threading.Thread(
             target=self.read_errors,
             daemon=True,
         )
+
         self.output_thread.start()
         self.error_thread.start()
 
@@ -99,7 +103,7 @@ class EngineProcess:
         if self.stderr_lines:
             raise AssertionError(f"The engine emitted unexpected diagnostics: {self.stderr_lines}",)
 
-class UciTests(unittest.TestCase):
+class UciTests(unittest.TestCase,):
     def setUp(self,) -> None:
         self.engine = EngineProcess()
         self.engine.send_command("uci",)
@@ -113,6 +117,7 @@ class UciTests(unittest.TestCase):
             "id author Mayaz Rakib",
             self.engine.transcript,
         )
+
         self.assertTrue(any((line.startswith("id name alekhine 0.1.0",) for line in self.engine.transcript),),)
         self.assertTrue(any(("Threads type spin default 1 min 1 max 1" in line for line in self.engine.transcript),),)
         self.engine.send_command("isready",)
@@ -122,10 +127,12 @@ class UciTests(unittest.TestCase):
         self.engine.send_command("position startpos",)
         self.engine.send_command("go depth 2",)
         bestmove = self.engine.wait_for_line("bestmove ",).split()[1]
+
         self.assertRegex(
             bestmove,
             r"^(?:[a-h]2[a-h][34]|b1[ac]3|g1[fh]3)$",
         )
+
         self.assertTrue(any((line.startswith("info depth 2 ",) for line in self.engine.transcript),),)
 
     def test_node_limited_search(self,) -> None:
@@ -143,6 +150,7 @@ class UciTests(unittest.TestCase):
                 node_counts.append(int(match[1],),)
 
         self.assertTrue(node_counts,)
+
         self.assertLessEqual(
             max(node_counts,),
             3000,
@@ -151,6 +159,7 @@ class UciTests(unittest.TestCase):
     def test_one_node_still_returns_a_move(self,) -> None:
         self.engine.send_command("go nodes 1",)
         bestmove = self.engine.wait_for_line("bestmove ",)
+
         self.assertNotIn(
             "bestmove 0000",
             bestmove,
@@ -187,6 +196,7 @@ class UciTests(unittest.TestCase):
         started_at_seconds = time.monotonic()
         self.engine.send_command("go movetime 150",)
         self.engine.wait_for_line("bestmove ",)
+
         self.assertLess(
             time.monotonic() - started_at_seconds,
             3.0,
@@ -202,11 +212,14 @@ class UciTests(unittest.TestCase):
         self.engine.send_command("go depth 2",)
         self.engine.wait_for_line("bestmove ",)
         reports = [line for line in self.engine.transcript if line.startswith("info depth 2 ",)]
+
         self.assertEqual(
             len(reports,),
             3,
         )
+
         roots = [line.split(" pv ",)[1].split()[0] for line in reports]
+
         self.assertEqual(
             len(set(roots,),),
             3,
@@ -219,6 +232,7 @@ class UciTests(unittest.TestCase):
     def test_checkmate_returns_null_move(self,) -> None:
         self.engine.send_command("position fen 7k/6Q1/5K2/8/8/8/8/8 b - - 100 51",)
         self.engine.send_command("go depth 2",)
+
         self.assertEqual(
             self.engine.wait_for_line("bestmove ",),
             "bestmove 0000",
@@ -277,10 +291,12 @@ class UciTests(unittest.TestCase):
         self.engine.send_command("setoption name Clear Hash",)
         self.engine.send_command("setoption name EvalFile value <bootstrap>",)
         line = self.engine.wait_for_line("info string Loaded network fingerprint ",)
+
         self.assertIn(
             "untrained bootstrap weights.",
             line,
         )
+
         self.engine.send_command("go depth 1",)
         self.engine.wait_for_line("bestmove ",)
 

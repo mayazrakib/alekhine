@@ -18,6 +18,7 @@ def run_fixture() -> None:
             print("option name fault_mode type string default normal",)
             print("option name best_move type string default e2e4",)
             print("option name delay_milliseconds type spin default 0 min 0 max 1000",)
+
             print(
                 "uciok",
                 flush=True,
@@ -80,6 +81,7 @@ def run_fixture() -> None:
                 time.sleep(delay_milliseconds / 1000,)
 
             print(f"info depth 2 multipv 1 score cp 25 nodes 12 pv {best_move}",)
+
             print(
                 f"bestmove {best_move}",
                 flush=True,
@@ -89,6 +91,7 @@ def run_fixture() -> None:
                 f"bestmove {best_move}",
                 flush=True,
             )
+
             is_pending = False
         elif command == "quit":
             return

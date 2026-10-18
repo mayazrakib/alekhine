@@ -19,7 +19,7 @@ from uci_client import (
 
 ENGINE_PATH = Path(sys.argv.pop(1,),).resolve()
 
-class ResearchTests(unittest.TestCase):
+class ResearchTests(unittest.TestCase,):
     def test_option_parser_rejects_duplicate_and_multiline_settings(self,) -> None:
         for settings in (["Hash=16", "Hash=32",], ["Hash=16\nquit",], ["Hash",], ["=16",],):
             with self.assertRaises(ValueError,):
@@ -38,10 +38,12 @@ class ResearchTests(unittest.TestCase):
             "info depth 4 multipv 2 score cp 10 pv b1c3",
             "info string score cp broken pv output",
         ],)
+
         self.assertEqual(
             [report["depth_plies"] for report in reports],
             [3, 3,],
         )
+
         self.assertEqual(
             [report["moves"][0] for report in reports],
             ["e2e4", "d2d4",],
@@ -59,6 +61,7 @@ class ResearchTests(unittest.TestCase):
             dataset_path = Path(directory,) / "positions.txt"
             output_path = Path(directory,) / "model.nnue"
             dataset_path.write_text(TRAINING_RECORDS,)
+
             completed = subprocess.run(
                 [str(ENGINE_PATH,), "train_network", str(dataset_path,), str(output_path,), "2",],
                 capture_output=True,
@@ -66,11 +69,14 @@ class ResearchTests(unittest.TestCase):
                 timeout=20.0,
                 check=True,
             )
+
             self.assertIn(
                 "Saved network fingerprint",
                 completed.stdout,
             )
+
             self.assertTrue(output_path.is_file(),)
+
             client = UciClient(
                 ENGINE_PATH,
                 {"EvalFile": str(output_path,), "Policy Simulations": "8", "policy_verification_depth_plies": "1",},
@@ -82,11 +88,14 @@ class ResearchTests(unittest.TestCase):
                     "go searchmoves e2e4 depth 1",
                     10.0,
                 )
+
                 self.assertEqual(
                     best_move,
                     "e2e4",
                 )
+
                 self.assertTrue(any((line.startswith("info depth 1 ",) for line in transcript),),)
+
                 self.assertLess(
                     elapsed_seconds,
                     10.0,

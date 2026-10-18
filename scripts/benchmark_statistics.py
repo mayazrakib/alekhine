@@ -2,7 +2,7 @@ import math
 import statistics
 from typing import TypedDict
 
-class Distribution(TypedDict):
+class Distribution(TypedDict,):
     sample_count: int
     minimum: float
     maximum: float
@@ -36,7 +36,10 @@ def calculate_distribution(samples: list[float],) -> Distribution:
         "coefficient_of_variation": standard_deviation / mean if mean else 0.0,
     }
 
-class Sample(TypedDict, total=False):
+class Sample(
+    TypedDict,
+    total=False,
+):
     suite: str
     name: str
     model: str
@@ -57,7 +60,7 @@ class Sample(TypedDict, total=False):
     network_fingerprint: int
     overshoot_nanoseconds: int
 
-class Measurement(TypedDict):
+class Measurement(TypedDict,):
     suite: str
     name: str
     model: str
@@ -99,6 +102,7 @@ def summarize_samples(samples: list[Sample],) -> list[Measurement]:
 
         for metric, measurement in metrics.items():
             key = (sample["suite"], sample["name"], sample["model"], metric,)
+
             groups.setdefault(
                 key,
                 [],
@@ -115,7 +119,7 @@ def summarize_samples(samples: list[Sample],) -> list[Measurement]:
         for key, measurements in sorted(groups.items(),)
     ]
 
-class Comparison(TypedDict):
+class Comparison(TypedDict,):
     suite: str
     name: str
     model: str
@@ -136,6 +140,7 @@ def compare_measurements(
         (measurement["suite"], measurement["name"], measurement["model"],): measurement["distribution"]["median"]
         for measurement in candidate if measurement["metric"] == "nanoseconds_per_operation"
     }
+
     baseline_latencies = {
         (measurement["suite"], measurement["name"], measurement["model"],): measurement["distribution"]["median"]
         for measurement in baseline if measurement["metric"] == "nanoseconds_per_operation"
@@ -153,6 +158,7 @@ def compare_measurements(
             raise ValueError("Failed to compare benchmarks with invalid median durations.",)
 
         change_percent = (candidate_median / baseline_median - 1) * 100
+
         comparisons.append({
             "suite": key[0],
             "name": key[1],

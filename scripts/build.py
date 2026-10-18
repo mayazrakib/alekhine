@@ -49,10 +49,12 @@ def build_project(arguments: argparse.Namespace,) -> None:
     rustc = resolve_tool("rustc",)
     mode = arguments.mode
     build_directory = PROJECT_DIRECTORY / "build" / mode
+
     build_directory.mkdir(
         parents=True,
         exist_ok=True,
     )
+
     revision_process = subprocess.run(
         ["git", "describe", "--always", "--dirty",],
         cwd=PROJECT_DIRECTORY,
@@ -60,6 +62,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
         text=True,
         check=False,
     )
+
     revision = revision_process.stdout.strip() if revision_process.returncode == 0 else "uncommitted"
     environment = os.environ.copy()
     environment["ALEKHINE_REVISION"] = revision
@@ -89,9 +92,11 @@ def build_project(arguments: argparse.Namespace,) -> None:
         cargo + ["build",] + command_options,
         environment,
     )
+
     executable_suffix = ".exe" if os.name == "nt" else ""
     engine_path = build_directory / ("alekhine" + executable_suffix)
     cargo_profile = "release" if mode == "release" else "debug"
+
     shutil.copy2(
         target_directory / cargo_profile / engine_path.name,
         engine_path,
@@ -101,6 +106,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
         rustc + ["--version", "--verbose",],
         text=True,
     ).splitlines()
+
     compiler_version = compiler_output[0]
     target_architecture = next((line.removeprefix("host: ",) for line in compiler_output if line.startswith("host: ",)),)
     source_digest = hashlib.sha256()
@@ -136,6 +142,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
         "has_completed_tests": False,
         "has_completed_stockfish_tests": False,
     }
+
     (build_directory / "build_manifest.json").write_text(json.dumps(
         manifest,
         indent=4,
@@ -146,18 +153,22 @@ def build_project(arguments: argparse.Namespace,) -> None:
             cargo + ["test",] + command_options,
             environment,
         )
+
         run_command(
             [sys.executable, str(PROJECT_DIRECTORY / "test" / "uci_tests.py",), str(engine_path,),],
             environment,
         )
+
         run_command(
             [sys.executable, str(PROJECT_DIRECTORY / "test" / "research_tests.py",), str(engine_path,),],
             environment,
         )
+
         run_command(
             [sys.executable, str(PROJECT_DIRECTORY / "test" / "tool_tests.py",),],
             environment,
         )
+
         integration_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "integration_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
@@ -167,6 +178,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
             integration_command,
             environment,
         )
+
         stockfish_training_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "stockfish_training_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
@@ -176,6 +188,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
             stockfish_training_command,
             environment,
         )
+
         run_command(
             [sys.executable, str(PROJECT_DIRECTORY / "test" / "performance_tests.py",), str(engine_path,),],
             environment,
@@ -183,6 +196,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
 
     manifest["has_completed_tests"] = arguments.should_test
     manifest["has_completed_stockfish_tests"] = arguments.should_test and (arguments.stockfish is not None)
+
     (build_directory / "build_manifest.json").write_text(json.dumps(
         manifest,
         indent=4,
@@ -192,31 +206,37 @@ def build_project(arguments: argparse.Namespace,) -> None:
 
 def run_build() -> None:
     parser = argparse.ArgumentParser(description="Build and verify the alekhine Rust engine.",)
+
     parser.add_argument(
         "--mode",
         choices=("release", "debug",),
         default="release",
     )
+
     parser.add_argument(
         "--test",
         dest="should_test",
         action="store_true",
     )
+
     parser.add_argument(
         "--stockfish",
         type=Path,
         help="Run real Stockfish and python-chess integration workflows with --test.",
     )
+
     parser.add_argument(
         "--native",
         dest="is_native",
         action="store_true",
     )
+
     parser.add_argument(
         "--lto",
         dest="has_lto",
         action="store_true",
     )
+
     arguments = parser.parse_args()
 
     if (arguments.stockfish is not None) and not arguments.should_test:

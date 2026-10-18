@@ -31,7 +31,7 @@ from build import (
 SCHEMA_VERSION = 1
 TIMEOUT_SECONDS = 600.0
 
-class BenchmarkOutcome(Enum):
+class BenchmarkOutcome(Enum,):
     PASSED = "passed"
     REGRESSED = "regressed"
 
@@ -57,10 +57,12 @@ def write_json(
 def build_core_binary(log_directory: Path,) -> Path:
     environment = os.environ.copy()
     environment["RUSTC"] = resolve_tool("rustc",)[0]
+
     environment["RUSTFLAGS"] = environment.get(
         "RUSTFLAGS",
         "",
     ) + " -Dwarnings"
+
     command = resolve_tool("cargo",) + [
         "build",
         "--offline",
@@ -72,6 +74,7 @@ def build_core_binary(log_directory: Path,) -> Path:
         "--target-dir",
         str(PROJECT_DIRECTORY / "build" / "benchmark" / "cargo",),
     ]
+
     completed = subprocess.run(
         command,
         cwd=PROJECT_DIRECTORY,
@@ -80,6 +83,7 @@ def build_core_binary(log_directory: Path,) -> Path:
         text=True,
         timeout=TIMEOUT_SECONDS,
     )
+
     (log_directory / "core_build.jsonl").write_text(completed.stdout,)
     (log_directory / "core_build.stderr").write_text(completed.stderr,)
     completed.check_returncode()
@@ -134,6 +138,7 @@ def read_process_resources(process_id: int,) -> tuple[
         ")",
         1,
     )[1].split()
+
     cpu_seconds = (int(fields[11],) + int(fields[12],)) / os.sysconf("SC_CLK_TCK",)
     peak_rss_bytes = None
 
@@ -160,6 +165,7 @@ def execute_command(
         command = [str(time_path,), "-q", "-o", str(resource_path,), "-f", resource_format, "--",] + command
 
     started_at = time.perf_counter_ns()
+
     process = subprocess.Popen(
         command,
         cwd=PROJECT_DIRECTORY,
@@ -168,6 +174,7 @@ def execute_command(
         text=True,
         start_new_session=(os.name == "posix"),
     )
+
     failure = None
 
     try:
@@ -244,6 +251,7 @@ def run_core_suite(
         arguments.output / "logs",
         "core",
     )
+
     write_json(
         arguments.output / "core_process.json",
         {"elapsed_nanoseconds": elapsed_nanoseconds, "resources": resources,},
@@ -279,6 +287,7 @@ def run_latency_suite(
         arguments.output / "logs",
         "latency_legal_moves",
     )
+
     legal_moves = {line.split()[0] for line in legal_output.splitlines() if (len(line.split(),) == 2) and line.split()[1].isdigit()}
 
     if len(legal_moves,) != 20:
@@ -298,10 +307,12 @@ def run_latency_suite(
         for sample_index in range(arguments.samples + 1,):
             phase = "first pass" if sample_index == 0 else "measured"
             started_at = time.perf_counter_ns()
+
             client = UciClient(
                 arguments.engine,
                 options,
             )
+
             startup_nanoseconds = time.perf_counter_ns() - started_at
 
             try:
@@ -319,6 +330,7 @@ def run_latency_suite(
                     if name in ["active_ready", "stop", "ponderhit",]:
                         client.is_searching = True
                         client.send_command("go ponder nodes 1000" if name == "ponderhit" else "go infinite",)
+
                         transcript += client.wait_for_line(
                             "info depth ",
                             20.0,
@@ -328,10 +340,12 @@ def run_latency_suite(
                     started_at = time.perf_counter_ns()
                     command = {"idle_ready": "isready", "active_ready": "isready", "stop": "stop", "ponderhit": "ponderhit", "movetime_50": "go movetime 50",}[name]
                     client.send_command(command,)
+
                     transcript += client.wait_for_line(
                         "readyok" if name.endswith("ready",) else "bestmove ",
                         20.0,
                     )
+
                     elapsed_nanoseconds = time.perf_counter_ns() - started_at
                     cpu_after, peak_rss_bytes = read_process_resources(client.process.pid,)
 
@@ -365,6 +379,7 @@ def run_latency_suite(
                         samples,
                         sample,
                     )
+
                     (arguments.output / "logs" / f"latency_{model}_{sample_index}_{name}.uci").write_text("\n".join(transcript,) + "\n",)
             finally:
                 client.close_process()
@@ -376,12 +391,15 @@ def run_training_suite(
 ) -> None:
     for record_count in arguments.training_records:
         dataset_path = arguments.output / f"synthetic_{record_count}.txt"
+
         execute_command(
             [str(core_binary,), "--dataset", str(dataset_path,), "--records", str(record_count,),],
             arguments.output / "logs",
             f"generate_{record_count}",
         )
+
         dataset_digest = calculate_digest(dataset_path,)
+
         write_json(
             dataset_path.with_suffix(".provenance.json",),
             {"is_synthetic": True, "seed": 20261004, "record_count": record_count, "sha256": dataset_digest, "targets": "Material score, synthetic draw outcome, and first legal move.",},
@@ -389,11 +407,13 @@ def run_training_suite(
 
         for sample_index in range(arguments.samples + 1,):
             network_path = arguments.output / f"trained_{record_count}_{sample_index}.nnue"
+
             stdout, elapsed_nanoseconds, resources = execute_command(
                 [str(arguments.engine,), "train_network", str(dataset_path,), str(network_path,), str(arguments.epochs,), "--batch_size", str(arguments.batch_size,), "--seed", "20261004", "--maximum_record_count", str(record_count,),],
                 arguments.output / "logs",
                 f"train_{record_count}_{sample_index}",
             )
+
             training_manifest = json.loads(network_path.with_suffix(".training.json",).read_text(),)
 
             if not network_path.is_file() or not stdout or (training_manifest["training_record_count"] + training_manifest["validation_record_count"] != record_count):
@@ -440,24 +460,29 @@ def validate_baseline(
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Measure engine performance and retain reproducible benchmark artifacts.",)
+
     parser.add_argument(
         "--engine",
         type=Path,
         default=PROJECT_DIRECTORY / "build" / "release" / "alekhine",
     )
+
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--core_binary",
         type=Path,
     )
+
     parser.add_argument(
         "--network",
         type=Path,
     )
+
     parser.add_argument(
         "--suite",
         choices=["all", "micro", "search", "latency", "training",],
@@ -477,20 +502,24 @@ def parse_arguments() -> argparse.Namespace:
         nargs="+",
         default=[32, 256, 2048,],
     )
+
     parser.add_argument(
         "--baseline",
         type=Path,
     )
+
     parser.add_argument(
         "--maximum_regression_percent",
         type=float,
         default=10.0,
     )
+
     parser.add_argument(
         "--allow_environment_change",
         dest="should_allow_environment_change",
         action="store_true",
     )
+
     arguments = parser.parse_args()
 
     for name, minimum, maximum in [("samples", 1, 100,), ("minimum_ms", 1, 1000,), ("nodes", 32, 1_000_000,), ("depth", 1, 6,), ("epochs", 1, 100,), ("batch_size", 1, 8192,),]:
@@ -529,6 +558,7 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
     arguments.output.mkdir(parents=True,)
     log_directory = arguments.output / "logs"
     log_directory.mkdir()
+
     report = {
         "schema_version": SCHEMA_VERSION,
         "status": "running",
@@ -542,7 +572,9 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
         "resource_scope": "GNU Time measures whole subprocesses. Linux proc CPU deltas use clock ticks, and RSS is the process high-water mark. Unsupported resource fields are null.",
         "training_scope": "Synthetic workload throughput includes loading, feature encoding, optimizer epochs, validation, quantization, and export. It is not model-quality evidence.",
     }
+
     manifest_path = arguments.output / "report.json"
+
     write_json(
         manifest_path,
         report,
@@ -569,15 +601,18 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
             report["core_binary"] = str(core_binary,)
 
         report["engine"] = str(arguments.engine,)
+
         report["compiler"] = subprocess.check_output(
             resolve_tool("rustc",) + ["--version",],
             text=True,
             timeout=20.0,
         ).strip()
+
         report["rustflags"] = os.environ.get(
             "RUSTFLAGS",
             "",
         )
+
         report["core_effective_rustflags"] = report["rustflags"] + " -Dwarnings" if not arguments.core_binary else None
         report["cargo_profile_overrides"] = {name: setting for name, setting in os.environ.items() if name.startswith("CARGO_PROFILE_",)}
         report["core_source_sha256"] = hashlib.sha256(b"".join((path.read_bytes() for path in sorted((PROJECT_DIRECTORY / "src").glob("*.rs",),)),),).hexdigest() if not arguments.core_binary else None
@@ -595,6 +630,7 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
                 "Measuring engine operations and search.",
                 flush=True,
             )
+
             run_core_suite(
                 arguments,
                 core_binary,
@@ -606,6 +642,7 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
                 "Measuring UCI lifecycle latency.",
                 flush=True,
             )
+
             run_latency_suite(
                 arguments,
                 samples,
@@ -616,6 +653,7 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
                 "Measuring synthetic training workloads.",
                 flush=True,
             )
+
             run_training_suite(
                 arguments,
                 core_binary,
@@ -631,11 +669,13 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
             raise RuntimeError("Failed to complete benchmarks without measured samples.",)
 
         report["measurements"] = measurements
+
         report["comparisons"] = compare_measurements(
             measurements,
             baseline["measurements"],
             arguments.maximum_regression_percent,
         ) if baseline is not None else []
+
         report["maximum_regression_percent"] = arguments.maximum_regression_percent
         report["has_regressed"] = any((comparison["has_regressed"] for comparison in report["comparisons"]),)
         report["status"] = "complete"
@@ -656,12 +696,14 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
             manifest_path,
             report,
         )
+
         print(f"Completed benchmarks. Results are in {arguments.output}.",)
 
         return BenchmarkOutcome.REGRESSED if report["has_regressed"] else BenchmarkOutcome.PASSED
     except BaseException as error:
         report["status"] = "failed"
         report["failure"] = str(error,)
+
         write_json(
             manifest_path,
             report,

@@ -105,89 +105,107 @@ def build_match_command(arguments: argparse.Namespace,) -> list[str]:
 
 def run_match() -> None:
     parser = argparse.ArgumentParser(description="Run reproducible paired engine matches with Fastchess and SPRT.",)
+
     parser.add_argument(
         "--candidate",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--baseline",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--candidate_option",
         action="append",
         default=[],
     )
+
     parser.add_argument(
         "--baseline_option",
         action="append",
         default=[],
     )
+
     parser.add_argument(
         "--openings",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--runner",
         default="fastchess",
     )
+
     parser.add_argument(
         "--time-control",
         default="10+0.1",
     )
+
     parser.add_argument(
         "--rounds",
         type=int,
         default=10000,
     )
+
     parser.add_argument(
         "--concurrency",
         type=int,
         default=1,
     )
+
     parser.add_argument(
         "--hash-mib",
         type=int,
         default=16,
     )
+
     parser.add_argument(
         "--seed",
         type=int,
         default=20261004,
     )
+
     parser.add_argument(
         "--elo1",
         type=float,
         default=5.0,
     )
+
     parser.add_argument(
         "--alpha",
         type=float,
         default=0.05,
     )
+
     parser.add_argument(
         "--beta",
         type=float,
         default=0.05,
     )
+
     parser.add_argument(
         "--timeout-seconds",
         type=int,
         default=86400,
     )
+
     parser.add_argument(
         "--dry-run",
         dest="is_dry_run",
         action="store_true",
     )
+
     arguments = parser.parse_args()
 
     try:
@@ -208,6 +226,7 @@ def run_match() -> None:
             parents=True,
             exist_ok=False,
         )
+
         manifest = {
             "candidate_sha256": compute_file_digest(arguments.candidate,),
             "baseline_sha256": compute_file_digest(arguments.baseline,),
@@ -228,11 +247,13 @@ def run_match() -> None:
             manifest,
             indent=4,
         ) + "\n",)
+
         subprocess.run(
             command,
             check=True,
             timeout=arguments.timeout_seconds,
         )
+
         print(f"Completed the match in {arguments.output}.",)
     except (OSError, ValueError, subprocess.SubprocessError,) as error:
         parser.exit(

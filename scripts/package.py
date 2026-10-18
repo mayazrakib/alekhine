@@ -27,10 +27,12 @@ def package_project(arguments: argparse.Namespace,) -> None:
 
     archive_name = f"alekhine-{manifest['version']}-{manifest['target_architecture']}-{arguments.mode}"
     output_directory = arguments.output
+
     output_directory.mkdir(
         parents=True,
         exist_ok=True,
     )
+
     archive_paths = (
         output_directory / f"{archive_name}.tar.gz",
         output_directory / f"{archive_name}.zip",
@@ -72,16 +74,19 @@ def package_project(arguments: argparse.Namespace,) -> None:
 
 def run_package() -> None:
     parser = argparse.ArgumentParser(description="Package a verified alekhine Rust build as executable distribution archives.",)
+
     parser.add_argument(
         "--mode",
         choices=("release", "debug",),
         default="release",
     )
+
     parser.add_argument(
         "--output",
         type=Path,
         default=PROJECT_DIRECTORY / "dist",
     )
+
     arguments = parser.parse_args()
 
     try:

@@ -25,21 +25,25 @@ from benchmark_statistics import (
     summarize_samples,
 )
 
-class StatisticsTests(unittest.TestCase):
+class StatisticsTests(unittest.TestCase,):
     def test_distribution_retains_spread_and_interpolates_percentile(self,) -> None:
         distribution = calculate_distribution([1.0, 2.0, 3.0, 4.0, 5.0,],)
+
         self.assertEqual(
             distribution["median"],
             3.0,
         )
+
         self.assertAlmostEqual(
             distribution["p95"],
             4.8,
         )
+
         self.assertAlmostEqual(
             distribution["standard_deviation"],
             2.5 ** 0.5,
         )
+
         self.assertEqual(
             distribution["sample_count"],
             5,
@@ -50,6 +54,7 @@ class StatisticsTests(unittest.TestCase):
             calculate_distribution([2.0,],)["standard_deviation"],
             0.0,
         )
+
         self.assertEqual(
             calculate_distribution([0.0, 0.0,],)["coefficient_of_variation"],
             0.0,
@@ -72,14 +77,17 @@ class StatisticsTests(unittest.TestCase):
         measurements = summarize_samples(self.create_samples(),)
         latency = next((measurement for measurement in measurements if measurement["metric"] == "nanoseconds_per_operation"),)
         throughput = next((measurement for measurement in measurements if measurement["metric"] == "nodes_per_second"),)
+
         self.assertEqual(
             latency["distribution"]["median"],
             150.0,
         )
+
         self.assertEqual(
             latency["distribution"]["sample_count"],
             2,
         )
+
         self.assertEqual(
             throughput["distribution"]["median"],
             375000000.0,
@@ -107,10 +115,12 @@ class StatisticsTests(unittest.TestCase):
                 baseline,
                 10.0,
             )
+
             self.assertEqual(
                 comparisons[0]["has_regressed"],
                 has_regressed,
             )
+
             self.assertAlmostEqual(
                 comparisons[0]["change_percent"],
                 (multiplier - 1) * 100,
@@ -143,6 +153,7 @@ class StatisticsTests(unittest.TestCase):
     def test_baseline_compatibility_checks_workload_suite_network_and_status(self,) -> None:
         candidate = self.create_manifest()
         baseline = self.create_manifest()
+
         benchmark.validate_baseline(
             candidate,
             baseline,
@@ -178,7 +189,7 @@ class StatisticsTests(unittest.TestCase):
             True,
         )
 
-class HarnessTests(unittest.TestCase):
+class HarnessTests(unittest.TestCase,):
     engine_path: Path
     core_binary: Path
     directory: tempfile.TemporaryDirectory
@@ -229,26 +240,33 @@ class HarnessTests(unittest.TestCase):
         first = [json.loads(line,) for line in self.execute_harness().stdout.splitlines()]
         second = [json.loads(line,) for line in self.execute_harness().stdout.splitlines()]
         search_samples = [sample for sample in first if sample["suite"] == "search"]
+
         self.assertEqual(
             len(search_samples,),
             432,
         )
+
         self.assertTrue(all((sample["node_count"] <= 64 for sample in search_samples if "_nodes_" in sample["name"]),),)
         first_outputs = [(sample["name"], sample["best_move"], sample["node_count"], sample["score_centipawns"],) for sample in search_samples]
         second_outputs = [(sample["name"], sample["best_move"], sample["node_count"], sample["score_centipawns"],) for sample in second if sample["suite"] == "search"]
+
         self.assertEqual(
             first_outputs,
             second_outputs,
         )
+
         micro_first_passes = {sample["name"]: sample["checksum"] for sample in first if (sample["suite"] == "micro") and (sample["phase"] == "first pass")}
+
         self.assertEqual(
             micro_first_passes["perft_3_position_0"],
             8902,
         )
+
         self.assertEqual(
             micro_first_passes["perft_3_position_4"],
             97862,
         )
+
         self.assertEqual(
             micro_first_passes["perft_3_position_5"],
             2812,
@@ -268,25 +286,32 @@ class HarnessTests(unittest.TestCase):
             paths[0].read_bytes(),
             paths[1].read_bytes(),
         )
+
         records = paths[0].read_text().splitlines()
+
         self.assertEqual(
             len(records,),
             32,
         )
+
         self.assertEqual(
             len({" ".join(record.split()[:4],) for record in records},),
             32,
         )
+
         self.assertTrue(any((record.endswith("game_3",) for record in records),),)
+
         failure = subprocess.run(
             [str(self.core_binary,), "--dataset", str(paths[0],), "--records", "32",],
             capture_output=True,
             timeout=10.0,
         )
+
         self.assertNotEqual(
             failure.returncode,
             0,
         )
+
         self.assertEqual(
             paths[0].read_bytes(),
             paths[1].read_bytes(),
@@ -294,23 +319,29 @@ class HarnessTests(unittest.TestCase):
 
     def test_full_runner_retains_resources_csv_protocols_and_provenance(self,) -> None:
         arguments = self.create_arguments()
+
         self.assertIs(
             benchmark.run_benchmarks(arguments,),
             benchmark.BenchmarkOutcome.PASSED,
         )
+
         report = json.loads((arguments.output / "report.json").read_text(),)
+
         self.assertEqual(
             report["status"],
             "complete",
         )
+
         self.assertEqual(
             report["engine_sha256"],
             benchmark.calculate_digest(self.engine_path,),
         )
+
         self.assertEqual(
             report["core_binary_sha256"],
             benchmark.calculate_digest(self.core_binary,),
         )
+
         self.assertTrue((arguments.output / "logs" / "latency_bootstrap_1_stop.uci").is_file(),)
         self.assertTrue((arguments.output / "synthetic_32.provenance.json").is_file(),)
 
@@ -321,6 +352,7 @@ class HarnessTests(unittest.TestCase):
             len(rows,),
             len(report["measurements"],),
         )
+
         self.assertEqual(
             {row["suite"] for row in rows},
             {"micro", "search", "latency", "training",},
@@ -351,6 +383,7 @@ class HarnessTests(unittest.TestCase):
             self.engine_path,
             self.directory_path,
         )
+
         completed = subprocess.run(
             [str(self.core_binary,), "--suite", "micro", "--samples", "1", "--minimum_ms", "1", "--network", str(network_path,),],
             capture_output=True,
@@ -358,12 +391,15 @@ class HarnessTests(unittest.TestCase):
             check=True,
             timeout=30.0,
         )
+
         samples = [json.loads(line,) for line in completed.stdout.splitlines()]
         measurements = summarize_samples(samples,)
+
         self.assertEqual(
             {measurement["model"] for measurement in measurements},
             {"bootstrap", "nnue",},
         )
+
         self.assertEqual(
             len(measurements,),
             32,
@@ -384,17 +420,22 @@ class HarnessTests(unittest.TestCase):
             baseline_path,
             baseline,
         )
+
         arguments.baseline = baseline_path
         arguments.output = self.directory_path / "regression"
+
         self.assertIs(
             benchmark.run_benchmarks(arguments,),
             benchmark.BenchmarkOutcome.REGRESSED,
         )
+
         report = json.loads((arguments.output / "report.json").read_text(),)
+
         self.assertEqual(
             report["status"],
             "complete",
         )
+
         self.assertTrue(report["has_regressed"],)
 
     def test_subprocess_failure_retains_logs(self,) -> None:
@@ -433,6 +474,7 @@ class HarnessTests(unittest.TestCase):
                 capture_output=True,
                 timeout=10.0,
             )
+
             self.assertNotEqual(
                 completed.returncode,
                 0,
@@ -440,10 +482,12 @@ class HarnessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "engine",
         type=Path,
     )
+
     arguments, remaining_arguments = parser.parse_known_args()
     HarnessTests.engine_path = arguments.engine.resolve()
     unittest.main(argv=[sys.argv[0],] + remaining_arguments,)

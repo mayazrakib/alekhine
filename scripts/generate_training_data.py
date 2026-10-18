@@ -20,46 +20,55 @@ def compute_digest(path: Path,) -> str:
 
 def generate_records() -> None:
     parser = argparse.ArgumentParser(description="Label quiet positions from PGN games with searched teacher scores and legal move distributions.",)
+
     parser.add_argument(
         "--pgn",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
     )
+
     parser.add_argument(
         "--teacher",
         type=Path,
         default=Path(shutil.which("stockfish",) or "stockfish",),
     )
+
     parser.add_argument(
         "--teacher_option",
         action="append",
         default=[],
     )
+
     parser.add_argument(
         "--nodes",
         type=int,
         default=10000,
     )
+
     parser.add_argument(
         "--maximum_records",
         type=int,
         default=10000,
     )
+
     parser.add_argument(
         "--sample_interval",
         type=int,
         default=4,
     )
+
     parser.add_argument(
         "--policy_temperature_centipawns",
         type=float,
         default=100.0,
     )
+
     arguments = parser.parse_args()
     teacher = None
 
@@ -78,15 +87,18 @@ def generate_records() -> None:
 
         options = {"Threads": "1", "Hash": "16", "MultiPV": "3",}
         options.update(parse_options(arguments.teacher_option,),)
+
         teacher = UciClient(
             arguments.teacher,
             options,
         )
+
         pgn_digest = compute_digest(arguments.pgn,)
         teacher_digest = compute_digest(arguments.teacher,)
         seen_positions = set()
         record_count = 0
         game_count = 0
+
         arguments.output.parent.mkdir(
             parents=True,
             exist_ok=True,
@@ -108,10 +120,12 @@ def generate_records() -> None:
                 board = game.board()
                 initial_fen = board.fen()
                 moves = []
+
                 white_outcome = {"1-0": "1", "0-1": "0", "1/2-1/2": "0.5",}.get(
                     game.headers.get("Result",),
                     "?",
                 )
+
                 termination = game.headers.get(
                     "Termination",
                     "",
@@ -141,6 +155,7 @@ def generate_records() -> None:
                             f"go nodes {arguments.nodes}",
                             60.0,
                         )
+
                         variations = parse_variations(transcript,)
 
                         if chess.Move.from_uci(best_move,) not in board.legal_moves:
@@ -200,6 +215,7 @@ def generate_records() -> None:
             "policy_target": "Softmax of searched MultiPV centipawn scores; unlisted moves receive zero target probability.",
             "python_chess_version": chess.__version__,
         }
+
         network_path = options.get("EvalFile",)
 
         if network_path and Path(network_path,).is_file():
@@ -209,6 +225,7 @@ def generate_records() -> None:
             manifest,
             indent=4,
         ) + "\n",)
+
         print(f"Generated {record_count} records in {arguments.output}.",)
     except ImportError as error:
         parser.exit(
