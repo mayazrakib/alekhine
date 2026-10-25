@@ -113,6 +113,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
 
     for source_path in sorted([
         *PROJECT_DIRECTORY.glob("src/*.rs",),
+        PROJECT_DIRECTORY / "tests" / "perf" / "engine_benchmark.rs",
         PROJECT_DIRECTORY / "build.rs",
         PROJECT_DIRECTORY / "Cargo.toml",
         PROJECT_DIRECTORY / "Cargo.lock",
@@ -190,7 +191,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
         )
 
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "performance_tests.py",), str(engine_path,),],
+            [sys.executable, str(PROJECT_DIRECTORY / "tests" / "perf" / "performance_tests.py",), str(engine_path,),],
             environment,
         )
 

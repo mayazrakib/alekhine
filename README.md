@@ -59,7 +59,7 @@ Use `scripts/generate_training_data.py` with Stockfish and `python-chess` to lab
 
 ```sh
 python3 scripts/build.py --test
-python3 scripts/benchmark.py --output build/benchmarks/baseline_001
+python3 tests/perf/benchmark.py --output build/benchmarks/baseline_001
 ```
 
 Stockfish integration tests additionally require Stockfish 18 and `python-chess`; pass `--stockfish /usr/bin/stockfish`. `scripts/verify_perft.py` compares move generation with `python-chess`. Do not run `rustfmt`.
