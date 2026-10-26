@@ -18,7 +18,7 @@ from test_support import (
 
 sys.path.insert(
     0,
-    str(PROJECT_DIRECTORY / "scripts",),
+    str(PROJECT_DIRECTORY / "tools" / "scripts",),
 )
 
 from uci_client import UciClient

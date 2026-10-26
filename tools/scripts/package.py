@@ -5,7 +5,7 @@ import tarfile
 import zipfile
 from pathlib import Path
 
-PROJECT_DIRECTORY = Path(__file__,).resolve().parent.parent
+PROJECT_DIRECTORY = Path(__file__,).resolve().parents[2]
 
 def package_project(arguments: argparse.Namespace,) -> None:
     build_directory = PROJECT_DIRECTORY / "build" / arguments.mode

@@ -14,7 +14,7 @@ def create_uci_fixture(directory: Path,) -> Path:
     fixture_path = directory / "protocol_fixture"
 
     shutil.copyfile(
-        PROJECT_DIRECTORY / "test" / "uci_fixture.py",
+        PROJECT_DIRECTORY / "tests" / "uci_fixture.py",
         fixture_path,
     )
 

@@ -8,7 +8,7 @@ from test_support import TRAINING_RECORDS
 
 sys.path.insert(
     0,
-    str(Path(__file__,).resolve().parent.parent / "scripts",),
+    str(Path(__file__,).resolve().parent.parent / "tools" / "scripts",),
 )
 
 from uci_client import (

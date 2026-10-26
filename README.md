@@ -1,75 +1,56 @@
-# Alekhine
+# `alekhine`
 
-`alekhine` is a Rust engine for standard chess that speaks the Universal Chess Interface (UCI) protocol. It uses alpha-beta search with bounded policy-guided candidate ordering. Its built-in neural-network weights are untrained, and it has not shown a playing-strength advantage over Stockfish.
+![Version](https://img.shields.io/badge/Version-0.1.0-737373?style=flat-square)
+![License](https://img.shields.io/badge/License-AGPL-3.0-or-later-737373?style=flat-square)
+![Languages](https://img.shields.io/badge/Languages-Rust%2C%20Python-737373?style=flat-square)
+![Frameworks](https://img.shields.io/badge/Frameworks-Cargo%2C%20python-chess-737373?style=flat-square)
+![Compatibility](https://img.shields.io/badge/Compatibility-Not%20verified-737373?style=flat-square)
+![Build](https://img.shields.io/badge/Build-Not%20run%20remotely-737373?style=flat-square)
+![Tests](https://img.shields.io/badge/Tests-Rust%20and%20Python%20suites%20passing-737373?style=flat-square)
+![Vulnerabilities](https://img.shields.io/badge/Vulnerabilities-0%20known%20dependency%20findings-737373?style=flat-square)
 
-## Build and run
+## 1. Introduction
 
-Alekhine requires Rust 1.85 or newer and uses only Rust's standard library.
+Alekhine is a standard-chess UCI research engine with alpha-beta search and bounded policy-guided ordering. Its bootstrap neural weights are untrained; no playing-strength advantage over Stockfish has been demonstrated.
 
-```sh
-cargo build --offline --locked --release
-./target/release/alekhine
-```
+## 2. Usage
 
-With no arguments, the binary reads UCI commands from standard input:
+Run `uv sync --locked`, then `uv run python tools/scripts/build.py` and `./build/release/alekhine`. Rust 1.98.0 is pinned; Rust 1.85 remains the declared minimum.
 
-```text
-uci
-isready
-position startpos moves e2e4 e7e5
-go depth 4
-```
+Send `uci`, `isready`, `position startpos moves e2e4 e7e5`, and `go depth 4` over standard input. Wait for `bestmove` before `quit`. `Hash`, `MultiPV`, `Ponder`, `Policy Simulations`, and `EvalFile` are supported; `Threads` accepts one worker.
 
-Wait for `bestmove` before sending `quit`. Use `uci` for the option list. `Hash`, `MultiPV`, `Ponder`, `Policy Simulations`, and `EvalFile` are available; `Threads` currently accepts one worker. `perft`, `divide`, `bench`, and `version` are also available as commands.
+`uv run python tools/scripts/package.py` creates archives in `dist/` and refuses to overwrite them.
 
-For a development build and packaged archives:
+## 3. Features
 
-```sh
-python3 scripts/build.py
-python3 scripts/package.py
-```
+Legal move generation, reversible state, incremental hashes, iterative deepening, quiescence, pruning, castling, en passant, promotion, repetition, the fifty-move rule, stalemate, and basic dead positions are implemented.
 
-The development binary is `build/release/alekhine`. Packaging writes archives to `dist/` and refuses to overwrite existing files.
+`EvalFile` accepts supported external Stockfish 18 large/small networks; `<bootstrap>` restores the bundled evaluator. Training separates whole games across training/validation, deduplicates positions, and refuses output replacement. No external engine source or network weights are bundled.
 
-## Networks and training
+## 4. Architecture
 
-Alekhine uses legal move generation, reversible moves, incremental hashes, iterative deepening, quiescence, and selective pruning. It handles castling, en passant, promotion, repetition, the fifty-move rule, stalemate, and basic dead positions.
+`src/` separates chess state, search, evaluation, UCI protocol, and training. `tools/scripts/` owns build, packaging, matches, and labeling. `tests/` contains Rust/Python tests and `tests/perf/` contains profiling.
 
-Its bootstrap evaluator is a quantized, untrained NNUE. It can also load supported Stockfish 18 large and small networks:
+Run `uv run python tools/scripts/build.py --test`; pass `--stockfish /usr/bin/stockfish` for real Stockfish 18 integration. `tools/scripts/verify_perft.py` compares move generation with python-chess. Do not run rustfmt. Use `uv run python tests/perf/benchmark.py --output build/benchmarks/baseline_001` for retained benchmark samples. Timings and validation loss do not establish playing strength.
 
-```text
-setoption name EvalFile value /absolute/path/to/model.nnue
-```
+## 5. Dependencies
 
-Set `EvalFile` to `<bootstrap>` to restore the bundled evaluator. No external engine source code or network weights are bundled.
+| Dependency | Version | Use |
+|---|---|---|
+| `python-chess` | `1.999` | runtime |
+| `Rust standard library` | `1.98.0` | engine runtime and build |
 
-The trainer accepts FEN positions, White-relative scores, optional outcomes and move probabilities, and game identifiers. It keeps whole games apart between training and validation, deduplicates positions, and refuses to overwrite outputs.
+## 6. Roadmap
 
-```sh
-mkdir -p build/training
-./build/release/alekhine train_network \
-    build/training/positions.txt \
-    build/training/model.nnue \
-    10
-```
+- [x] Single-worker standard chess, UCI, and training tooling.
+- [ ] Chess960, tablebases, GPU inference, and distributed training are not implemented.
 
-Use `scripts/generate_training_data.py` with Stockfish and `python-chess` to label PGN games. `fine_tune_stockfish` supports compatible Stockfish 18 networks. Validation loss alone is not playing-strength evidence.
+## 7. Contributing
 
-## Test and benchmark
+Read `AGENTS.md` and the applicable skills in `.ai/skills/` before contributing. Set up the development environment with `uv sync --locked`. Follow the repository conventions, preserve supported behavior, and add relevant tests for behavior changes. Run `uv run --locked python tools/scripts/build.py --test` and `uv run --locked python tools/scripts/build.py` before opening a pull request. Describe the change, its purpose, and the validation results in the pull request.
 
-```sh
-python3 scripts/build.py --test
-python3 tests/perf/benchmark.py --output build/benchmarks/baseline_001
-```
+## 8. License
 
-Stockfish integration tests additionally require Stockfish 18 and `python-chess`; pass `--stockfish /usr/bin/stockfish`. `scripts/verify_perft.py` compares move generation with `python-chess`. Do not run `rustfmt`.
+`alekhine` is licensed under the AGPL-3.0-or-later license. See LICENSE for the complete license text.
 
-The benchmark runner retains raw samples and a report. Timings depend on the host and do not measure playing strength. `scripts/play_stockfish.py` runs paired games, while `scripts/match.py --dry-run` prepares a larger Fastchess match.
-
-The Rust library separates chess state, engine search, evaluation, protocol, and training code into matching modules under `src/`. Python build, test, benchmark, match, and packaging tools remain under `scripts/`.
-
-## Limits and licence
-
-Alekhine currently supports standard chess on one CPU search worker. Chess960, tablebases, GPU inference, distributed training, and full Stockfish evaluation are not implemented. Linux x86-64 testing does not establish support for other platforms or long tournament play.
-
-Alekhine is licensed under the [GNU Affero General Public License, version 3 or later](LICENSE). Optional external tools, training data, and network weights retain their own licences.
+See `ACKNOWLEDGEMENTS.md` for third-party notices and attributions.

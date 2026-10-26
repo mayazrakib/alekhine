@@ -13,7 +13,7 @@ from uci_client import (
     parse_variations,
 )
 
-PROJECT_DIRECTORY = Path(__file__,).resolve().parent.parent
+PROJECT_DIRECTORY = Path(__file__,).resolve().parents[2]
 
 def compute_digest(path: Path,) -> str:
     with path.open("rb",) as source:
@@ -40,7 +40,7 @@ def run_games() -> None:
     parser.add_argument(
         "--openings",
         type=Path,
-        default=PROJECT_DIRECTORY / "test/openings.epd",
+        default=PROJECT_DIRECTORY / "tests/openings.epd",
     )
 
     parser.add_argument(

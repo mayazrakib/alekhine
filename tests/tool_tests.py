@@ -16,7 +16,7 @@ from test_support import (
 
 sys.path.insert(
     0,
-    str(PROJECT_DIRECTORY / "scripts",),
+    str(PROJECT_DIRECTORY / "tools" / "scripts",),
 )
 
 import match
@@ -207,7 +207,7 @@ class MatchCommandTests(unittest.TestCase,):
         self.baseline.write_bytes(self.candidate.read_bytes(),)
         self.baseline.chmod(0o700,)
         self.openings = self.root / "openings.epd"
-        self.openings.write_bytes((PROJECT_DIRECTORY / "test" / "openings.epd").read_bytes(),)
+        self.openings.write_bytes((PROJECT_DIRECTORY / "tests" / "openings.epd").read_bytes(),)
 
     def create_arguments(self,) -> argparse.Namespace:
         return argparse.Namespace(

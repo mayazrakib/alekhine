@@ -1,3 +1,4 @@
+# Environment And Build
 /build/
 /dist/
 /__pycache__/
@@ -10,7 +11,8 @@
 *.network
 *.pgn
 *.epd
-!/test/openings.epd
+!/tests/openings.epd
 .env
 .DS_Store
 /target/
+.venv/

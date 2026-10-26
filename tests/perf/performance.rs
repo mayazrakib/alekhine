@@ -105,7 +105,7 @@ fn parse_options() -> BenchmarkResult<BenchmarkOptions> {
 fn load_positions() -> BenchmarkResult<Vec<Position>> {
     let mut positions = Vec::new();
 
-    for line in include_str!("../../test/openings.epd").lines() {
+    for line in include_str!("../../tests/openings.epd").lines() {
         let fields: Vec<&str> = line.split_whitespace().take(4).collect();
         positions.push(Position::parse_fen(&format!(
             "{} 0 1",

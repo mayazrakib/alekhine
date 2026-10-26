@@ -18,7 +18,7 @@ from test_support import (
 
 sys.path.insert(
     0,
-    str(PROJECT_DIRECTORY / "scripts",),
+    str(PROJECT_DIRECTORY / "tools" / "scripts",),
 )
 
 from uci_client import (
@@ -520,13 +520,13 @@ class StockfishIntegrationTests(ProcessTests,):
     ) -> list[str]:
         return [
             sys.executable,
-            str(PROJECT_DIRECTORY / "scripts/play_stockfish.py",),
+            str(PROJECT_DIRECTORY / "tools/scripts/play_stockfish.py",),
             "--candidate",
             str(candidate,),
             "--stockfish",
             str(self.stockfish_path,),
             "--openings",
-            str(PROJECT_DIRECTORY / "test/openings.epd",),
+            str(PROJECT_DIRECTORY / "tests/openings.epd",),
             "--output",
             str(output_path,),
             "--pairs",
@@ -645,7 +645,7 @@ class StockfishIntegrationTests(ProcessTests,):
 
         self.run_program([
             sys.executable,
-            str(PROJECT_DIRECTORY / "scripts/generate_training_data.py",),
+            str(PROJECT_DIRECTORY / "tools/scripts/generate_training_data.py",),
             "--pgn",
             str(pgn_path,),
             "--teacher",
@@ -867,7 +867,7 @@ class StockfishIntegrationTests(ProcessTests,):
         pgn_path = self.root / "teacher.pgn"
         pgn_path.write_text(TEACHER_PGN,)
         output_path = self.root / "positions.txt"
-        arguments = [sys.executable, str(PROJECT_DIRECTORY / "scripts/generate_training_data.py",), "--pgn", str(pgn_path,), "--teacher", str(self.stockfish_path,), "--output", str(output_path,),]
+        arguments = [sys.executable, str(PROJECT_DIRECTORY / "tools/scripts/generate_training_data.py",), "--pgn", str(pgn_path,), "--teacher", str(self.stockfish_path,), "--output", str(output_path,),]
         output_path.write_text("Preserved labels.\n",)
 
         self.run_program(
@@ -892,7 +892,7 @@ class StockfishIntegrationTests(ProcessTests,):
     def test_reference_perft_matches_independent_python_chess_positions(self,) -> None:
         completed = self.run_program([
             sys.executable,
-            str(PROJECT_DIRECTORY / "scripts/verify_perft.py",),
+            str(PROJECT_DIRECTORY / "tools/scripts/verify_perft.py",),
             str(self.engine_path,),
             "--positions",
             "128",

@@ -10,7 +10,7 @@ import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
-PROJECT_DIRECTORY = Path(__file__,).resolve().parent.parent
+PROJECT_DIRECTORY = Path(__file__,).resolve().parents[2]
 
 def run_command(
     arguments: list[str],
@@ -156,21 +156,21 @@ def build_project(arguments: argparse.Namespace,) -> None:
         )
 
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "uci_tests.py",), str(engine_path,),],
+            [sys.executable, str(PROJECT_DIRECTORY / "tests" / "uci_tests.py",), str(engine_path,),],
             environment,
         )
 
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "research_tests.py",), str(engine_path,),],
+            [sys.executable, str(PROJECT_DIRECTORY / "tests" / "research_tests.py",), str(engine_path,),],
             environment,
         )
 
         run_command(
-            [sys.executable, str(PROJECT_DIRECTORY / "test" / "tool_tests.py",),],
+            [sys.executable, str(PROJECT_DIRECTORY / "tests" / "tool_tests.py",),],
             environment,
         )
 
-        integration_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "integration_tests.py",), str(engine_path,),]
+        integration_command = [sys.executable, str(PROJECT_DIRECTORY / "tests" / "integration_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
             integration_command += ["--stockfish", str(arguments.stockfish,),]
@@ -180,7 +180,7 @@ def build_project(arguments: argparse.Namespace,) -> None:
             environment,
         )
 
-        stockfish_training_command = [sys.executable, str(PROJECT_DIRECTORY / "test" / "stockfish_training_tests.py",), str(engine_path,),]
+        stockfish_training_command = [sys.executable, str(PROJECT_DIRECTORY / "tests" / "stockfish_training_tests.py",), str(engine_path,),]
 
         if arguments.stockfish is not None:
             stockfish_training_command += ["--stockfish", str(arguments.stockfish,),]

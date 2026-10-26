@@ -10,7 +10,7 @@ from pathlib import Path
 
 from uci_client import parse_options
 
-PROJECT_DIRECTORY = Path(__file__,).resolve().parent.parent
+PROJECT_DIRECTORY = Path(__file__,).resolve().parents[2]
 
 def compute_file_digest(path: Path,) -> str:
     with path.open("rb",) as source:

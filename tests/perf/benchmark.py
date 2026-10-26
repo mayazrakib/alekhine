@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(
     0,
-    str(Path(__file__).resolve().parents[2] / "scripts"),
+    str(Path(__file__,).resolve().parents[2] / "tools" / "scripts",),
 )
 
 from benchmark_statistics import (
@@ -573,7 +573,7 @@ def run_benchmarks(arguments: argparse.Namespace,) -> BenchmarkOutcome:
             arguments,
             name,
         ) for name in ["suite", "samples", "minimum_ms", "nodes", "depth", "epochs", "batch_size", "training_records",]},
-        "suite_sha256": hashlib.sha256(b"".join(((PROJECT_DIRECTORY / path).read_bytes() for path in ["tests/perf/performance.rs", "test/openings.epd", "tests/perf/benchmark.py", "tests/perf/benchmark_statistics.py",]),),).hexdigest(),
+        "suite_sha256": hashlib.sha256(b"".join(((PROJECT_DIRECTORY / path).read_bytes() for path in ["tests/perf/performance.rs", "tests/openings.epd", "tests/perf/benchmark.py", "tests/perf/benchmark_statistics.py",]),),).hexdigest(),
         "resource_scope": "GNU Time measures whole subprocesses. Linux proc CPU deltas use clock ticks, and RSS is the process high-water mark. Unsupported resource fields are null.",
         "training_scope": "Synthetic workload throughput includes loading, feature encoding, optimizer epochs, validation, quantization, and export. It is not model-quality evidence.",
     }
