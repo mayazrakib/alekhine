@@ -76,5 +76,3 @@ Read `AGENTS.md` and the applicable skills in `.ai/skills/` before contributing.
 ## 8. License
 
 `alekhine` is licensed under the AGPL-3.0-or-later license. See LICENSE for the complete license text.
-
-See `ACKNOWLEDGEMENTS.md` for third-party notices and attributions.
