@@ -5,12 +5,14 @@ edition = "2024"
 rust-version = "1.85"
 description = "A research-grade chess engine."
 authors = ["Mayaz Rakib",]
-license = "AGPL-3.0-or-later"
+license = "MIT"
 readme = "README.md"
 include = [
     "/src/**/*.rs",
     "/tests/**/*.rs",
     "/tests/perf/*.py",
+    "/benchmarks/*.py",
+    "/benchmarks/*.rs",
     "/tests/*.py",
     "/tests/openings.epd",
     "/tools/scripts/*.py",
@@ -38,5 +40,5 @@ path = "tests/core_tests.rs"
 
 [[bench]]
 name = "performance"
-path = "tests/perf/performance.rs"
+path = "benchmarks/performance.rs"
 harness = false

@@ -1,7 +1,5 @@
-# `alekhine`
-
 ![Version](https://img.shields.io/badge/Version-0.1.0-737373?style=flat-square)
-![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-737373?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-737373?style=flat-square)
 ![Languages](https://img.shields.io/badge/Languages-Rust%2C%20Python-737373?style=flat-square)
 ![Frameworks](https://img.shields.io/badge/Frameworks-Cargo%2C%20python--chess-737373?style=flat-square)
 ![Compatibility](https://img.shields.io/badge/Compatibility-Not%20verified-737373?style=flat-square)
@@ -49,11 +47,11 @@ No external engine source or network weights are bundled.
 
 ## 4. Architecture
 
-`src/` separates chess state, search, evaluation, the UCI protocol, and training. `tools/scripts/` owns building, packaging, matches, and labeling. `tests/` holds the Rust and Python tests, and `tests/perf/` holds profiling.
+`src/` separates chess state, search, evaluation, the UCI protocol, and training. `tools/scripts/` owns building, packaging, matches, and labeling. `tests/` holds the Rust and Python tests, and `benchmarks/` holds profiling infrastructure.
 
-### Verification
+### 4.1. Verification
 
-`uv run python tools/scripts/build.py --test` builds and tests the engine. Add `--stockfish /usr/bin/stockfish` to include real Stockfish 18 integration tests. `tools/scripts/verify_perft.py` compares move generation with python-chess. `uv run python tests/perf/benchmark.py --output build/benchmarks/baseline_001` records retained benchmark samples. Timings and validation loss don't establish playing strength.
+`uv run python tools/scripts/build.py --test` builds and tests the engine. Add `--stockfish /usr/bin/stockfish` to include real Stockfish 18 integration tests. `tools/scripts/verify_perft.py` compares move generation with python-chess. `uv run python benchmarks/benchmark.py --output build/benchmarks/baseline_001` records retained benchmark samples. Timings and validation loss don't establish playing strength.
 
 Don't run `rustfmt` on this repository.
 
@@ -75,4 +73,4 @@ Read `AGENTS.md` and the applicable skills in `.ai/skills/` before contributing.
 
 ## 8. License
 
-`alekhine` is licensed under the AGPL-3.0-or-later license. See LICENSE for the complete license text.
+`alekhine` is licensed under the MIT license. See LICENSE for the complete license text.

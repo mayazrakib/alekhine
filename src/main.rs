@@ -26,7 +26,6 @@ use alekhine::training::native::{
 };
 use alekhine::training::stockfish::fine_tune_stockfish;
 
-#[path = "../tests/perf/engine_benchmark.rs"]
 mod engine_benchmark;
 
 use engine_benchmark::run_benchmark;
@@ -65,7 +64,10 @@ fn run_engine() -> EngineResult<ExitCode> {
         println!("A research-grade chess engine.");
         println!("Author: Mayaz Rakib.");
         println!("Copyright (C) 2026 Mayaz Rakib.");
-        println!("License: AGPL-3.0-or-later.");
+        println!(
+            "License: {}.",
+            env!("CARGO_PKG_LICENSE"),
+        );
         println!(
             "Revision: {}.",
             env!("ALEKHINE_REVISION"),

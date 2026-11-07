@@ -23,6 +23,11 @@ sys.path.insert(
     str(PROJECT_DIRECTORY / "tools" / "scripts",),
 )
 
+sys.path.insert(
+    0,
+    str(PROJECT_DIRECTORY / "benchmarks",),
+)
+
 import benchmark
 from benchmark_statistics import (
     calculate_distribution,
