@@ -1,11 +1,5 @@
-![Version](https://img.shields.io/badge/Version-0.1.0-737373?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-737373?style=flat-square)
-![Languages](https://img.shields.io/badge/Languages-Rust%2C%20Python-737373?style=flat-square)
-![Frameworks](https://img.shields.io/badge/Frameworks-Cargo%2C%20python--chess-737373?style=flat-square)
-![Compatibility](https://img.shields.io/badge/Compatibility-Not%20verified-737373?style=flat-square)
-![Build](https://img.shields.io/badge/Build-Not%20verified-737373?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-Rust%20and%20Python%20suites%20passing-737373?style=flat-square)
-![Vulnerabilities](https://img.shields.io/badge/Vulnerabilities-0%20known%20dependency%20findings-737373?style=flat-square)
+[![Build and tests](https://github.com/mayazrakib/alekhine/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/mayazrakib/alekhine/actions/workflows/ci.yml)
+[![Security scan](https://github.com/mayazrakib/alekhine/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/mayazrakib/alekhine/actions/workflows/security.yml)
 
 ## 1. Introduction
 
