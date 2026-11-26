@@ -1,0 +1,18 @@
+# Environment And Build
+/build/
+/dist/
+/__pycache__/
+**/__pycache__/
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+*.nnue
+*.network
+*.pgn
+*.epd
+!/tests/openings.epd
+.env
+.DS_Store
+/target/
+.venv/
